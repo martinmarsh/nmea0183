@@ -1,10 +1,10 @@
-package main
+package nmea0183
 
 import(
 	"fmt"
 )
 
 func Config(){
-	fmt.Println("hello")
+	fmt.Println("hello world")
 
 }
