@@ -55,25 +55,25 @@ variables:
     status: "A"   # status of fix A = ok ie 1 V = fail ie 0
     lat:
         - "llll.lll"
-        - "s"  # lat float N positive
+        - "NS"  # lat N / S postfix
     long:
         - "yyyyy.yyyy"
-        - "w"   # long float E positive
+        - "WE"   # long float W/E postfix
     sog: "x.x"  # Speed Over Ground  float knots
     tmg: "x.x"  # Track Made Good
     date: "ddmmyy" # Date of fix may not be valid with some GPS
     mag_var:
         - "x.x"
-        - "a"     # Mag Var E positive
+        - "w"     # Mag Var E positive, W negative
     day: "x"
     month: "x"
     year: "x"
     tz:
         - "tz_h"
-        - "tz_m"  # Datetime from ZDA if available
+        - "tz_m"  # Datetime from ZDA if available - tz return hours and mins as a float
     xte:
         - "x.x"
-        - "R"           # Cross Track Error R is positive
+        - "R"           # Cross Track Error turn R or L
     xte_units: "A"      # Units for XTE - N = Nm
     acir: "A"           # Arrived at way pt circle
     aper: "A"           # Perpendicular passing of way pt
