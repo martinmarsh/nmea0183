@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/martinmarsh/nmea0183"
 )
 

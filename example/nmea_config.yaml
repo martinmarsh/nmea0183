@@ -74,6 +74,7 @@ variables:
     xte:
         - "x.x"
         - "R"           # Cross Track Error turn R or L
+        
     xte_units: "A"      # Units for XTE - N = Nm
     acir: "A"           # Arrived at way pt circle
     aper: "A"           # Perpendicular passing of way pt
