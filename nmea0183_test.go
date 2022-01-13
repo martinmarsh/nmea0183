@@ -7,7 +7,7 @@ import (
 
 func TestConfig(t *testing.T) {
 	fmt.Println(len(Sentences))
-    e := Config("./example")
+    e := Config()
 	if e != nil{
 		fmt.Println(e)
 	}

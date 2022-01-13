@@ -3,14 +3,109 @@ package nmea0183
 import (
 	"fmt"
 	"math"
+	"os"
 	"strconv"
 	"strings"
-
 	"github.com/spf13/viper"
 )
 
 var Sentences = make(map[string][]string)
 var Variables = make(map[string][]string)
+
+var yamlExample = []byte(`
+sentences:
+    RMC:
+        - "time"
+        - "status"
+        - "lat"
+        - "long"
+        - "sog"
+        - "tmg"
+        - "date"
+        - "mag_var"
+    ZDA:
+        - "time"
+        - "day"
+        - "month"
+        - "year"
+        - "tz"
+    APB:
+        - "status"
+        - "n/a"
+        - "xte"
+        - "xte_units"
+        - "acir"
+        - "aper"
+        - "bod"
+        - "bod_true"
+        - "did"
+        - "bpd"
+        - "bpd_true"
+        - "hts"
+        - "hts_true"
+    HDG:
+        - "n/a"
+        - "n/a" 
+        - "n/a"
+        - "mag_var"
+    HDM:
+        - "hdm"
+    DPT:
+        - "dbt"
+        - "toff"
+    VHW:
+        - "n/a"
+        - "n/a"
+        - "n/a"
+        - "n/a"
+        - "stw"
+    VLW:
+        - "n/a"
+        - "n/a"
+        - "wd"
+
+variables:
+    time: "hhmmss.ss"  # time of fix
+    status: "A"   # status of fix A = ok ie 1 V = fail ie 0
+    lat:
+        - "llll.lll"
+        - "NS"  # lat N / S postfix
+    long:
+        - "yyyyy.yyyy"
+        - "WE"   # long float W/E postfix
+    sog: "x.x"  # Speed Over Ground  float knots
+    tmg: "x.x"  # Track Made Good
+    date: "ddmmyy" # Date of fix may not be valid with some GPS
+    mag_var:
+        - "x.x"
+        - "w"     # Mag Var E positive, W negative
+    day: "x"
+    month: "x"
+    year: "x"
+    tz:
+        - "tz_h"
+        - "tz_m"  # Datetime from ZDA if available - tz return hours and mins as a float
+    xte:
+        - "x.x"
+        - "R"           # Cross Track Error turn R or L
+        
+    xte_units: "A"      # Units for XTE - N = Nm
+    acir: "A"           # Arrived at way pt circle
+    aper: "A"           # Perpendicular passing of way pt
+    bod: "x.x"
+    bod_true: "T"        # Bearing origin to destination True
+    did: "str"             # Destination Waypoint ID as a str
+    bpd: "x.x"
+    bdp_true: "T"        # Bearing, present position to Destination True
+    hts: "x.x"
+    hts_true: "T"        # Heading to Steer True
+    hdm: "x.x"          # Heading Magnetic
+    dbt: "x.x"          # Depth below transducer
+    toff: "x.x"         # Transducer offset -ve from transducer to keel +ve transducer to water line
+    stw: "x.x"          # Speed Through Water float knots
+    dw:  "x.x"             # Water distance since reset float knots
+
+`)
 
 /*type nmea interface {
     area() float64
@@ -26,25 +121,28 @@ func Config(setting ...string) error{
 	viper.SetConfigType(configSet[2])   // REQUIRED if the config file does not have the extension in the name
 
 	viper.AddConfigPath(configSet[0])    // optionally look for config in the working directory
-	viper.AddConfigPath(".")  // optionally look for config in the working directory
+	viper.AddConfigPath("..")  // optionally look for config in aprent of the working directory
+
 	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil {             // Handle errors reading the config file
-		return err
-	}
-	
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := /*  */ err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found; ignore error if desired
-			err = fmt.Errorf("fatal error config file err: %w not found = %t", err, ok)
-			return err
+	if err != nil{
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found
+
+			os.WriteFile("nmea_config.yaml", yamlExample, 0644)
+    
+			err = viper.ReadInConfig()
+			if err != nil{
+				err = fmt.Errorf("fatal error in config file: %w", err)
+				return err
+			}
+
 		} else {
 			// Config file was found but another error was produced
 			err = fmt.Errorf("fatal error in config file: %w", err)
 			return err
 		}
 	}
-
-
+	
 	Sentences = viper.GetStringMapStringSlice("sentences")
 	Variables = viper.GetStringMapStringSlice("variables")
 	return err

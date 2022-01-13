@@ -10,7 +10,10 @@ import (
 )
 
 func main() {
-	nmea0183.Config()
+	err := nmea0183.Config()
+	if err != nil{
+		fmt.Println("Error config not found")
+	}
 	results := nmea0183.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 	fmt.Println(results)
 
