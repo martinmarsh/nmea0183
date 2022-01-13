@@ -12,31 +12,42 @@ import (
 var Sentences = make(map[string][]string)
 var Variables = make(map[string][]string)
 
+/*type nmea interface {
+    area() float64
+    perim() float64
+}*/
 
-func Config(){
-	viper.SetConfigName("nmea_config") // name of config file (without extension)
-	viper.SetConfigType("yaml")   // REQUIRED if the config file does not have the extension in the name
 
-	viper.AddConfigPath(".")    // optionally look for config in the working directory
-	viper.AddConfigPath("./example")  // optionally look for config in the working directory
+func Config(setting ...string) error{
+	configSet := []string{".", "nmea_config", "yaml"}
+	copy (configSet, setting)
+
+	viper.SetConfigName(configSet[1]) // name of config file (without extension)
+	viper.SetConfigType(configSet[2])   // REQUIRED if the config file does not have the extension in the name
+
+	viper.AddConfigPath(configSet[0])    // optionally look for config in the working directory
+	viper.AddConfigPath(".")  // optionally look for config in the working directory
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {             // Handle errors reading the config file
-		panic(fmt.Errorf("fatal error config file: %w", err))
+		return err
 	}
 	
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := /*  */ err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found; ignore error if desired
-			panic(fmt.Errorf("fatal error config file err: %w not found = %t", err, ok))
+			err = fmt.Errorf("fatal error config file err: %w not found = %t", err, ok)
+			return err
 		} else {
 			// Config file was found but another error was produced
-			panic(fmt.Errorf("fatal error in config file: %w", err))
+			err = fmt.Errorf("fatal error in config file: %w", err)
+			return err
 		}
 	}
 
 
 	Sentences = viper.GetStringMapStringSlice("sentences")
 	Variables = viper.GetStringMapStringSlice("variables")
+	return err
 }
 
 func Parse(nmea string)  map[string]string {

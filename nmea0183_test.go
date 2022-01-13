@@ -7,7 +7,10 @@ import (
 
 func TestConfig(t *testing.T) {
 	fmt.Println(len(Sentences))
-    Config()
+    e := Config("./example")
+	if e != nil{
+		fmt.Println(e)
+	}
 	fmt.Println(len(Sentences))
     total := 10
 	if total != 10 {
