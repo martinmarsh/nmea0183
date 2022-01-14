@@ -12,6 +12,11 @@ import (
 var Sentences = make(map[string][]string)
 var Variables = make(map[string][]string)
 
+/*
+The following is a get started config. used to generate nmea_conf.yaml
+if it is missing in root directory
+
+*/
 var yamlExample = []byte(`
 sentences:
     RMC:
@@ -272,7 +277,7 @@ func checksum(s string) string {
         check_sum ^= (int)(nmea_data[i])
     }
 
-    return fmt.Sprintf("%2X", check_sum)
+    return fmt.Sprintf("%02X", check_sum)
 }
 
 func findInMap(k string, m map[string][]string) (string, []string){
@@ -332,4 +337,3 @@ func LatLongToString(latFloat float64, longFloat float64)(string, string){
 
 	return lat, long
 }
-
