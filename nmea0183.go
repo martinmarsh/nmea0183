@@ -264,10 +264,11 @@ func LatLongToFloat(params ...string) (float64, float64, error) {
 		long = params[1]
 	}
 
-	lenL := len(lat) - 1
+	lenL := len(lat)
 	if lenL > 8 {
 		lenL --
 		symbol := lat[lenL]
+		lenL --
 		dlat, _ := strconv.ParseFloat(lat[:2], 64)
 		mlat, _ := strconv.ParseFloat(lat[5:lenL], 64)
 		dlat += mlat / 60
