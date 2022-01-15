@@ -66,7 +66,6 @@ func TestConvetFloatLatLong(t *testing.T) {
 
 }
 
-
 func TestZDA(t *testing.T){
 	nm, _ := Load()
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
@@ -81,6 +80,7 @@ func TestZDA(t *testing.T){
 	}
 
 }
+
 
 func TestZDACreate(t *testing.T){
 	zda := []string {"time","day","month","year","tz"}
@@ -107,12 +107,24 @@ func TestZDACreate(t *testing.T){
 	if nm.Data["tz"] != "1.50" {
 		t.Errorf("Error TZ time incorrectly parsed got %s", nm.Data["tz"])
 	}
+	
 	// Test loading another create is independant
 	nm2 := Create(sentences, variables)
 	if len(nm2.Data) != 0 || len(nm2.History) !=0 || len(nm.Data) == 0 || len(nm.History) == 0 {
 		t.Errorf("Second Create call failed - check that they are independan ")
 	}
+	nm3 := Create(sentences)
+	nm3.Parse("$GPZDA,120910.59,15,09,2020,01,30*6E")
+	if nm3.Data["time"] != "12:09:10.59" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
+	}
+	nm4 := Create()
+	nm4.Parse("$GPZDA,130910.59,15,09,2020,01,30*6E")
+	if nm4.Data["time"] != "13:09:10.59" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
+	}
 	
-	//chec
+}
 
+func TestNone(t *testing.T){
 }

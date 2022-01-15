@@ -24,10 +24,19 @@ func setUp() *Config{
 	return &c
 }
 
-func Create(sentances, variables map[string][]string) *Config {
+func Create(params ...map[string][]string) *Config {
 	c := setUp()
-	c.Sentences = sentances
-	c.Variables = variables
+	if len(params) == 1 {
+		c.Sentences = params[0]
+		c.Variables = *GetDefaultVars()
+	}
+	if len(params) == 2 {
+		c.Sentences = params[0]
+		c.Variables = params[1]
+	}else{
+		c.Sentences = *GetDefaultSentences()
+		c.Variables = *GetDefaultVars()
+	}
 	return c
 }
 
