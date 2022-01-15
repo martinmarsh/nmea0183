@@ -119,7 +119,7 @@ func TestZDACreate(t *testing.T){
 		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
 	}
 	nm4 := Create()
-	nm4.Parse("$GPZDA,130910.59,15,09,2020,01,30*6E")
+	nm4.Parse("$GPZDA,130910.59,15,09,2020,01,30*6F")
 	if nm4.Data["time"] != "13:09:10.59" {
 		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
 	}

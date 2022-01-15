@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"math"
 	"os"
+	"time"
 	"strconv"
 	"strings"
 )
@@ -14,6 +15,9 @@ type Config struct {
 	Data                 map[string]string
 	History				 map[string]int32
 	Counter				 int32
+	timeWatch			 time.Time
+	timeWatchCount		 int32
+	autoClearPeriod		 int
 }
 
 func setUp() *Config{
@@ -21,6 +25,9 @@ func setUp() *Config{
 	c.Data = make(map[string]string)
 	c.History = make(map[string]int32) 
 	c.Counter = 0
+	c.timeWatch = time.Now()
+	c.timeWatchCount = 0
+	c.autoClearPeriod = -1  // Disabled
 	return &c
 }
 
@@ -78,12 +85,44 @@ func Load(setting ...string) (*Config, error) {
 	return c, err
 }
 
+func (c *Config) DeleteBefore(count int32){
+	/*
+	Deletes variables in data which have a message count less than count parameter
+	if a neagtive value is supplied then the value is releative to current  ie -1000
+	would delete all variables which have not been updated in the last 1000 messages
+
+	*/
+	if count < 0{
+		count = c.Counter + count
+	}
+	if int32(count) < c.Counter{
+		for i, v := range c.History{
+			if v < count{
+				delete(c.Data, i)
+			}
+		}
+	}
+
+}
+
 func (c *Config) Merge(results map[string]string) {
 	c.Counter ++
+	if c.autoClearPeriod > 0 {
+		if c.timeWatch.After(time.Now().Add(time.Second * time.Duration(c.autoClearPeriod))){
+			c.DeleteBefore(c.timeWatchCount)
+		}
+	}
+	c.timeWatch = time.Now()
+	c.timeWatchCount = c.Counter
+
 	for n, v := range results {
 		c.Data[n] = v
 		c.History[n] = c.Counter
 	}
+}
+
+func (c *Config) AutoClear(clear int) {
+	c.autoClearPeriod = clear
 }
 
 func (c *Config) Parse(nmea string) {
@@ -323,9 +362,12 @@ func (c *Config) LatLongToString(latFloat, longFloat float64, params ...string) 
 
 	if len(params) == 1 {
 		c.Data[params[0]] = latStr + ", " + longStr
+		c.History[params[0]] = c.Counter
 	} else {
 		c.Data[params[0]] = latStr
 		c.Data[params[1]] = longStr
+		c.History[params[0]] = c.Counter
+		c.History[params[1]] = c.Counter
 	}
 	
 	return nil
