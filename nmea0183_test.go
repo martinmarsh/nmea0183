@@ -7,7 +7,7 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-    e := Config()
+    _, e := Load()
 	if e != nil {
 		errStr := fmt.Errorf("Config failed with error: %w", e)
 		t.Error(errStr)
@@ -68,7 +68,24 @@ func TestConvetFloatLatLong(t *testing.T) {
 
 
 func TestZDA(*testing.T){
-	results := Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
-	fmt.Println(results)
+	nm, _ := Load()
+	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
+	fmt.Println(nm.Data)
+
+}
+
+func TestZDA2(*testing.T){
+	zda := []string {"time","day","month","year","tz"}
+	sentences := map[string][]string {"zda": zda}
+	variables := map[string][]string {
+		 "time": {"hhmmss.ss"},
+		 "day": {"x"},
+		 "month": {"x"},
+		 "year": {"x"},
+		 "tz": {"tz_h", "tz_m"},	   
+		}
+	nm := Create(sentences, variables)
+	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
+	fmt.Println(nm.Data)
 
 }

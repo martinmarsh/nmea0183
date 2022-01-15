@@ -2,196 +2,120 @@ package nmea0183
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"math"
 	"os"
 	"strconv"
 	"strings"
-	"github.com/spf13/viper"
 )
 
-var Sentences = make(map[string][]string)
-var Variables = make(map[string][]string)
+type Config struct {
+	Sentences, Variables map[string][]string
+	Data                 map[string]string
+	History				 map[string]int32
+	Counter				 int32
+}
 
-/*
-The following is a get started config. used to generate nmea_conf.yaml
-if it is missing in root directory
+func setUp() *Config{
+	var c Config
+	c.Data = make(map[string]string)
+	c.History = make(map[string]int32) 
+	c.Counter = 0
+	return &c
+}
 
-*/
-var yamlExample = []byte(`
-sentences:
-    RMC:
-        - "time"
-        - "status"
-        - "lat"
-        - "long"
-        - "sog"
-        - "tmg"
-        - "date"
-        - "mag_var"
-    ZDA:
-        - "time"
-        - "day"
-        - "month"
-        - "year"
-        - "tz"
-    APB:
-        - "status"
-        - "n/a"
-        - "xte"
-        - "xte_units"
-        - "acir"
-        - "aper"
-        - "bod"
-        - "bod_true"
-        - "did"
-        - "bpd"
-        - "bpd_true"
-        - "hts"
-        - "hts_true"
-    HDG:
-        - "n/a"
-        - "n/a" 
-        - "n/a"
-        - "mag_var"
-    HDM:
-        - "hdm"
-    DPT:
-        - "dbt"
-        - "toff"
-    VHW:
-        - "n/a"
-        - "n/a"
-        - "n/a"
-        - "n/a"
-        - "stw"
-    VLW:
-        - "n/a"
-        - "n/a"
-        - "wd"
+func Create(sentances, variables map[string][]string) *Config {
+	c := setUp()
+	c.Sentences = sentances
+	c.Variables = variables
+	return c
+}
 
-variables:
-    time: "hhmmss.ss"  # time of fix
-    status: "A"   # status of fix A = ok ie 1 V = fail ie 0
-    lat:
-        - "llll.lll"
-        - "NS"  # lat N / S postfix
-    long:
-        - "yyyyy.yyyy"
-        - "WE"   # long float W/E postfix
-    sog: "x.x"  # Speed Over Ground  float knots
-    tmg: "x.x"  # Track Made Good
-    date: "ddmmyy" # Date of fix may not be valid with some GPS
-    mag_var:
-        - "x.x"
-        - "w"     # Mag Var E positive, W negative
-    day: "x"
-    month: "x"
-    year: "x"
-    tz:
-        - "tz_h"
-        - "tz_m"  # Datetime from ZDA if available - tz return hours and mins as a float
-    xte:
-        - "x.x"
-        - "R"           # Cross Track Error turn R or L
-        
-    xte_units: "A"      # Units for XTE - N = Nm
-    acir: "A"           # Arrived at way pt circle
-    aper: "A"           # Perpendicular passing of way pt
-    bod: "x.x"
-    bod_true: "T"        # Bearing origin to destination True
-    did: "str"             # Destination Waypoint ID as a str
-    bpd: "x.x"
-    bdp_true: "T"        # Bearing, present position to Destination True
-    hts: "x.x"
-    hts_true: "T"        # Heading to Steer True
-    hdm: "x.x"          # Heading Magnetic
-    dbt: "x.x"          # Depth below transducer
-    toff: "x.x"         # Transducer offset -ve from transducer to keel +ve transducer to water line
-    stw: "x.x"          # Speed Through Water float knots
-    dw:  "x.x"             # Water distance since reset float knots
-
-`)
-
-/*type nmea interface {
-    area() float64
-    perim() float64
-}*/
-
-
-func Config(setting ...string) error{
+func Load(setting ...string) (*Config, error) {
+	c := setUp()
 	configSet := []string{".", "nmea_config", "yaml"}
-	copy (configSet, setting)
+	copy(configSet, setting)
 
 	viper.SetConfigName(configSet[1]) // name of config file (without extension)
-	viper.SetConfigType(configSet[2])   // REQUIRED if the config file does not have the extension in the name
+	viper.SetConfigType(configSet[2]) // REQUIRED if the config file does not have the extension in the name
 
-	viper.AddConfigPath(configSet[0])    // optionally look for config in the working directory
-	viper.AddConfigPath("..")  // optionally look for config in aprent of the working directory
+	viper.AddConfigPath(configSet[0]) // optionally look for config in the working directory
+	viper.AddConfigPath("..")         // optionally look for config in aprent of the working directory
 
 	err := viper.ReadInConfig() // Find and read the config file
-	if err != nil{
+	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found
+			// Config file not found and looked for yaml type trying writing a default one
+			if configSet[2] == "yaml" {
+				os.WriteFile(configSet[0]+"/"+configSet[1]+".yaml", yamlExample, 0644)
 
-			os.WriteFile("nmea_config.yaml", yamlExample, 0644)
-    
-			err = viper.ReadInConfig()
-			if err != nil{
-				err = fmt.Errorf("fatal error in config file: %w", err)
-				return err
+				err = viper.ReadInConfig()
+				if err != nil {
+					err = fmt.Errorf("fatal error in config file: %w", err)
+					return c, err
+				}
 			}
 
 		} else {
 			// Config file was found but another error was produced
 			err = fmt.Errorf("fatal error in config file: %w", err)
-			return err
+			return c, err
 		}
 	}
-	
-	Sentences = viper.GetStringMapStringSlice("sentences")
-	Variables = viper.GetStringMapStringSlice("variables")
-	return err
+
+	c.Sentences = viper.GetStringMapStringSlice("sentences")
+	c.Variables = viper.GetStringMapStringSlice("variables")
+	c.Data = make(map[string]string)
+	return c, err
 }
 
-func Parse(nmea string)  map[string]string {
-	end_byte:= len(nmea)
-	if nmea[end_byte -3] == '*'{
+func (c *Config) Merge(results map[string]string) {
+	c.Counter ++
+	for n, v := range results {
+		c.Data[n] = v
+		c.History[n] = c.Counter
+	}
+}
+
+func (c *Config) Parse(nmea string) {
+	end_byte := len(nmea)
+	if nmea[end_byte-3] == '*' {
 		check_code := checksum(nmea)
 		end_byte -= 2
-		if check_code != nmea[end_byte:]{
+		if check_code != nmea[end_byte:] {
 			fmt.Printf("check sum error: %s != %s\n", check_code, nmea[end_byte:])
 		}
-		end_byte --
+		end_byte--
 	}
 
 	parts := strings.Split(nmea[1:end_byte], ",")
 	preFix := parts[0][:2]
 	sentenceType := strings.ToLower(parts[0][2:])
-	key, varList := findInMap(sentenceType, Sentences)
-	results := map[string]string {"device": preFix, "sentence": sentenceType}
+	key, varList := findInMap(sentenceType, c.Sentences)
+	results := map[string]string{"device": preFix, "sentence": sentenceType}
 
-	if len(key) > 0{
+	if len(key) > 0 {
 		fieldPointer := 1
 
-		for varPointer :=0; varPointer < len(varList); varPointer++ {
-			varName, templateList := findInMap(varList[varPointer], Variables)
+		for varPointer := 0; varPointer < len(varList); varPointer++ {
+			varName, templateList := findInMap(varList[varPointer], c.Variables)
 			conVar := ""
-			if len(varName) > 0{
-				for _, template := range(templateList){
+			if len(varName) > 0 {
+				for _, template := range templateList {
 					conVar = convert(parts[fieldPointer], template, conVar)
-					fieldPointer ++
+					fieldPointer++
 				}
 				results[varName] = conVar
-			}else{
-				fieldPointer ++
+			} else {
+				fieldPointer++
 			}
 		}
 	}
-	return results	
+	c.Merge(results)
 }
 
-func convert(data string, template string, conVar string) string{
-	switch template{
+func convert(data string, template string, conVar string) string {
+	switch template {
 	case "hhmmss.ss":
 		h, e := strconv.ParseInt(data[:2], 10, 16)
 		m, e1 := strconv.ParseInt(data[2:4], 10, 16)
@@ -209,8 +133,8 @@ func convert(data string, template string, conVar string) string{
 	case "tz_m":
 		h, e := strconv.ParseFloat(conVar, 32)
 		m, e1 := strconv.ParseFloat(data, 32)
-		if e == nil && e1 == nil{
-			h += m/60
+		if e == nil && e1 == nil {
+			h += m / 60
 			return fmt.Sprintf("%02.2f", h)
 		}
 	case "A":
@@ -223,13 +147,13 @@ func convert(data string, template string, conVar string) string{
 		return data
 
 	case "w":
-		if data == "W" || data == "w"{
+		if data == "W" || data == "w" {
 			return "-" + conVar
 		}
 		return conVar
 
 	case "s":
-		if data == "S" || data == "s"{
+		if data == "S" || data == "s" {
 			return "-" + conVar
 		}
 		return conVar
@@ -259,54 +183,57 @@ func convert(data string, template string, conVar string) string{
 		y, _ := strconv.ParseInt(data[4:], 10, 32)
 		if y < 60 {
 			y += 2000
-		}else{
+		} else {
 			y += 1900
 		}
-		return fmt.Sprintf("%d-%02d-%02d", y ,m, d)
-	
-	}	
+		return fmt.Sprintf("%d-%02d-%02d", y, m, d)
+
+	}
 	return ""
 }
 
 func checksum(s string) string {
-	check_sum:= 0
+	check_sum := 0
 
-    nmea_data := []byte(s)
+	nmea_data := []byte(s)
 
-    for  i:= 1; i < len(s) - 3; i ++ {
-        check_sum ^= (int)(nmea_data[i])
-    }
+	for i := 1; i < len(s)-3; i++ {
+		check_sum ^= (int)(nmea_data[i])
+	}
 
-    return fmt.Sprintf("%02X", check_sum)
+	return fmt.Sprintf("%02X", check_sum)
 }
 
-func findInMap(k string, m map[string][]string) (string, []string){
-	
-	for i, v := range(m){
-		if i == k{
+func findInMap(k string, m map[string][]string) (string, []string) {
+
+	for i, v := range m {
+		if i == k {
 			return i, v
 		}
 	}
 	return "", []string{""}
 }
 
-func LatLongToFloat(lat string, long string)(float64, float64){
-	
-	lenL := len(lat)-1
+func (c *Config) LatLongToFloat(lat string, long string) (float64, float64) {
+	return LatLongToFloat(lat, long)
+}
+
+func LatLongToFloat(lat string, long string) (float64, float64) {
+	lenL := len(lat) - 1
 	symbol := lat[lenL]
 	lenL--
 	dlat, _ := strconv.ParseFloat(lat[:2], 64)
 	mlat, _ := strconv.ParseFloat(lat[5:lenL], 64)
-	dlat += mlat/60
+	dlat += mlat / 60
 	if symbol == 'S' {
 		dlat = -dlat
 	}
 	lenL = len(long) - 1
 	symbol = long[lenL]
-	lenL--	
+	lenL--
 	dlong, _ := strconv.ParseFloat(long[:3], 32)
 	mlong, _ := strconv.ParseFloat(long[6:lenL], 32)
-	dlong += mlong/60
+	dlong += mlong / 60
 	if symbol == 'W' {
 		dlong = -dlong
 	}
@@ -314,7 +241,12 @@ func LatLongToFloat(lat string, long string)(float64, float64){
 	return dlat, dlong
 }
 
-func LatLongToString(latFloat float64, longFloat float64)(string, string){
+func (c *Config) LatLongToString(latFloat float64, longFloat float64) (string, string) {
+	return LatLongToString(latFloat, longFloat)
+}
+
+func LatLongToString(latFloat float64, longFloat float64) (string, string) {
+
 	latAbs := math.Abs(latFloat)
 	latInt := int(latAbs)
 	latMins := (latAbs - float64(latInt)) * 60
@@ -323,7 +255,7 @@ func LatLongToString(latFloat float64, longFloat float64)(string, string){
 		symbol = "S"
 	}
 
-	lat :=  fmt.Sprintf("%02d° %02.4f'%s", latInt, latMins, symbol)
+	lat := fmt.Sprintf("%02d° %02.4f'%s", latInt, latMins, symbol)
 
 	longAbs := math.Abs(longFloat)
 	longInt := int(longAbs)

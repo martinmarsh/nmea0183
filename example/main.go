@@ -10,21 +10,33 @@ import (
 )
 
 func main() {
-	err := nmea0183.Config()
+	// Load config file from working directory or create an example one if not found
+	nm, err := nmea0183.Load()
 	if err != nil{
 		fmt.Println("Error config not found")
 	}
-	results := nmea0183.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
-	fmt.Println(results)
 
-	results = (nmea0183.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75"))
-	fmt.Println(results)
-	fmt.Println(results["lat"] + " "+ results["long"])
-	latFloat, longFloat := nmea0183.LatLongToFloat(results["lat"], results["long"])
+	// use returned handle to Parse NMEA statements
+	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
+	// values parsed are merged into a Data map
+	fmt.Println(nm.Data)
+
+	nm.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75")
+	fmt.Println(nm.Data)
+
+	//Format of lat and long are readable strings
+	fmt.Println(nm.Data["lat"] + " "+ nm.Data["long"])
+
+	//Can convert lat and long to floats
+	latFloat, longFloat := nm.LatLongToFloat(nm.Data["lat"], nm.Data["long"])
 	fmt.Printf("%f %f\n",latFloat, longFloat)
-	fmt.Println(nmea0183.Parse("$HCHDM,172.5,M*28"))
-	fmt.Println(nmea0183.Parse("$GPAPB,A,A,5,L,N,V,V,359.,T,1,359.1,T,6,T,A*7C"))
-	fmt.Println(nmea0183.Parse("$SSDPT,2.8,-0.7"))
+
+	//examples of other sentances passed
+	nm.Parse("$HCHDM,172.5,M*28")
+	nm.Parse("$GPAPB,A,A,5,L,N,V,V,359.,T,1,359.1,T,6,T,A*7C")
+	nm.Parse("$SSDPT,2.8,-0.7")
+
+	//Data is built and updated as sentances parsed
+	fmt.Println(nm.Data)
 
 }
-
