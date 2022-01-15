@@ -2,8 +2,7 @@ sentences:
     RMC:
         - "time"
         - "status"
-        - "lat"
-        - "long"
+        - "position"
         - "sog"
         - "tmg"
         - "date"
@@ -54,10 +53,15 @@ variables:
     time: "hhmmss.ss"  # time of fix
     status: "A"   # status of fix A = ok ie 1 V = fail ie 0
     lat:
-        - "llll.lll"
+        - "llll.llll"
         - "NS"  # lat N / S postfix
     long:
         - "yyyyy.yyyy"
+        - "WE"   # long float W/E postfix
+    position:
+        - "llll.llll"
+        - "NS"  # lat N / S postfix
+        - ",yyyyy.yyyy"
         - "WE"   # long float W/E postfix
     sog: "x.x"  # Speed Over Ground  float knots
     tmg: "x.x"  # Track Made Good

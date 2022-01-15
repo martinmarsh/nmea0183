@@ -25,11 +25,15 @@ func main() {
 	fmt.Println(nm.Data)
 
 	//Format of lat and long are readable strings
-	fmt.Println(nm.Data["lat"] + " "+ nm.Data["long"])
+	fmt.Println(nm.Data["position"])
 
-	//Can convert lat and long to floats
-	latFloat, longFloat := nm.LatLongToFloat(nm.Data["lat"], nm.Data["long"])
+	//Can convert position variable to floats
+	latFloat, longFloat, _ := nm.LatLongToFloat("position")
 	fmt.Printf("%f %f\n",latFloat, longFloat)
+
+	//Can write a variable from float lat and long
+	nm.LatLongToString(latFloat, longFloat, "new_position")
+	fmt.Println(nm.Data["new_position"])
 
 	//examples of other sentances passed
 	nm.Parse("$HCHDM,172.5,M*28")

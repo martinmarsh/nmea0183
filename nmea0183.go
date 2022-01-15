@@ -121,7 +121,7 @@ func convert(data string, template string, conVar string) string {
 		m, e1 := strconv.ParseInt(data[2:4], 10, 16)
 		s, e2 := strconv.ParseFloat(data[4:], 32)
 		if e == nil && e1 == nil && e2 == nil {
-			return fmt.Sprintf("%02d:%02d:%02.2f", h, m, s)
+			return conVar + fmt.Sprintf("%02d:%02d:%02.2f", h, m, s)
 		}
 		return ""
 	case "x.x":
@@ -161,7 +161,7 @@ func convert(data string, template string, conVar string) string {
 	case "R":
 		return data + conVar
 
-	case "llll.lll":
+	case "llll.llll":
 		d, _ := strconv.ParseInt(data[:2], 10, 32)
 		m, _ := strconv.ParseFloat(data[2:], 32)
 		return fmt.Sprintf("%02d° %02.4f'", d, m)
@@ -170,6 +170,11 @@ func convert(data string, template string, conVar string) string {
 		d, _ := strconv.ParseInt(data[:3], 10, 32)
 		m, _ := strconv.ParseFloat(data[3:], 32)
 		return fmt.Sprintf("%03d° %02.4f'", d, m)
+	
+	case ",yyyyy.yyyy":
+		d, _ := strconv.ParseInt(data[:3], 10, 32)
+		m, _ := strconv.ParseFloat(data[3:], 32)
+		return conVar + ", " + fmt.Sprintf("%03d° %02.4f'", d, m)
 
 	case "WE":
 		return conVar + data
@@ -214,38 +219,115 @@ func findInMap(k string, m map[string][]string) (string, []string) {
 	return "", []string{""}
 }
 
-func (c *Config) LatLongToFloat(lat string, long string) (float64, float64) {
-	return LatLongToFloat(lat, long)
+func (c *Config) LatLongToFloat(params ...string) (float64, float64, error) {
+	/*
+	As a method on the handler structure the string parameters refer to variable names in
+	c.Data
+
+	Give one parameter for a variable name that holds a position string ie in form lat, Long or
+	give the names of 2 variables  which hold lat and long respectively.
+
+	Returns a 2 floats lat and long and an error.  Minus values for South and West
+	*/
+
+	if len(params) == 2 {
+		lat:= c.Data[params[0]]
+		long := c.Data[params[1]]
+		return LatLongToFloat(lat, long)
+	}
+	if len(params) == 1{
+		return LatLongToFloat(c.Data[params[0]])
+	}
+
+	return 0, 0, fmt.Errorf("illegal number of parmeters given to latlongtofloat")
 }
 
-func LatLongToFloat(lat string, long string) (float64, float64) {
+func LatLongToFloat(params ...string) (float64, float64, error) {
+	/*
+	Give one parameter for a position string with lat, Long or
+	2 parameters to give separate lat and long  strings.
+
+	Returns a 2 floats lat and long and an error.  Minus values for South and West
+	*/
+	if len(params)<1 || len(params) > 2 {
+		return 0,0, fmt.Errorf("illegal number of parmeters given to latlongtofloat")
+	}
+	var lat, long string
+	var symbol byte 
+	var retLat, retLong float64 = 0, 0
+
+	if len(params) == 1 {
+		params = strings.SplitN(params[0], ", ", 2)
+	}
+	if len(params) == 2 {
+		lat = params[0]
+		long = params[1]
+	}
+
 	lenL := len(lat) - 1
-	symbol := lat[lenL]
-	lenL--
-	dlat, _ := strconv.ParseFloat(lat[:2], 64)
-	mlat, _ := strconv.ParseFloat(lat[5:lenL], 64)
-	dlat += mlat / 60
-	if symbol == 'S' {
-		dlat = -dlat
+	if lenL > 8 {
+		lenL --
+		symbol := lat[lenL]
+		dlat, _ := strconv.ParseFloat(lat[:2], 64)
+		mlat, _ := strconv.ParseFloat(lat[5:lenL], 64)
+		dlat += mlat / 60
+		if symbol == 'S' {
+			dlat = -dlat
+		}
+		retLat = dlat
 	}
-	lenL = len(long) - 1
-	symbol = long[lenL]
-	lenL--
-	dlong, _ := strconv.ParseFloat(long[:3], 32)
-	mlong, _ := strconv.ParseFloat(long[6:lenL], 32)
-	dlong += mlong / 60
-	if symbol == 'W' {
-		dlong = -dlong
+	lenL = len(long)
+	if lenL > 8 {
+		lenL -- 
+		symbol = long[lenL]
+		lenL--
+		dlong, _ := strconv.ParseFloat(long[:3], 64)
+		mlong, _ := strconv.ParseFloat(long[6:lenL], 64)
+		dlong += mlong / 60
+		if symbol == 'W' {
+			dlong = -dlong
+		}
+		retLong = dlong
 	}
-
-	return dlat, dlong
+	 
+	return retLat, retLong, nil
 }
 
-func (c *Config) LatLongToString(latFloat float64, longFloat float64) (string, string) {
-	return LatLongToString(latFloat, longFloat)
+
+func (c *Config) LatLongToString(latFloat, longFloat float64, params ...string) error {
+	/*
+	As a method on the data structure the string parameters refer to variable names in
+	c.Data wich will be set by converting the lat and long float parameters
+
+	One variable name assumes a position string containing lat, long will be set
+	two variable names assumes that 2 variables one for lat and on for long will bes set
+
+	Returns an error.  Assumes Minus values are for South and West
+	*/
+
+	if len(params) < 1 || len(params) > 2 {
+		return fmt.Errorf("illegal number of parmeters given to latlongtostring")
+	}
+
+	latStr, longStr, _ := LatLongToString(latFloat, longFloat)
+
+	if len(params) == 1 {
+		c.Data[params[0]] = latStr + ", " + longStr
+	} else {
+		c.Data[params[0]] = latStr
+		c.Data[params[1]] = longStr
+	}
+	
+	return nil
 }
 
-func LatLongToString(latFloat float64, longFloat float64) (string, string) {
+func LatLongToString(latFloat, longFloat float64) (string, string, error) {
+	/*
+	
+	Give  2 variables lat and long respectively. Minus values given denote South and West
+
+	Returns a 2 fromatted strings as lat and long and an error.
+	*/
 
 	latAbs := math.Abs(latFloat)
 	latInt := int(latAbs)
@@ -267,5 +349,5 @@ func LatLongToString(latFloat float64, longFloat float64) (string, string) {
 
 	long := fmt.Sprintf("%03d° %02.4f'%s", longInt, longMins, symbol)
 
-	return lat, long
+	return lat, long, nil
 }

@@ -32,9 +32,9 @@ func TestConvetLatLong(t *testing.T) {
 	latStr := "50° 47.3986'N"
 	longStr := "000° 54.6007'W"
 
-	latFloat, longFloat := LatLongToFloat(latStr, longStr)
+	latFloat, longFloat, _ := LatLongToFloat(latStr, longStr)
 
-	latr, longr := LatLongToString(latFloat, longFloat)
+	latr, longr, _ := LatLongToString(latFloat, longFloat)
 
 	if latr != latStr || longr != longStr{
 		t.Errorf("lat long conversion error %s != %s or %s != %s ", latStr, latr, longStr, longr)
@@ -49,8 +49,8 @@ func TestConvetFloatLatLong(t *testing.T) {
 	latf := -76.12345
 	longf := 170.54321
 
-	lats, longs := LatLongToString(latf, longf)
-	latr, longr := LatLongToFloat(lats, longs)
+	lats, longs, _ := LatLongToString(latf, longf)
+	latr, longr, _ := LatLongToFloat(lats, longs)
 
 
 	if math.Abs(latr-latf) > 1E-6 || math.Abs(longr-longf) > 1e-6 {
@@ -67,25 +67,52 @@ func TestConvetFloatLatLong(t *testing.T) {
 }
 
 
-func TestZDA(*testing.T){
+func TestZDA(t *testing.T){
 	nm, _ := Load()
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
-	fmt.Println(nm.Data)
+	if nm.Data["time"] != "11:09:10.59" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
+	}
+	if nm.Data["day"] != "15" || nm.Data["month"] != "09" ||nm.Data["year"] != "2020" {
+		t.Errorf("Icorrect data got %s %s %s", nm.Data["day"], nm.Data["month"], nm.Data["year"])
+	}
+	if nm.Data["tz"] != "0.00" {
+		t.Errorf("Error TZ time incorrectly parsed got %s", nm.Data["tz"])
+	}
 
 }
 
-func TestZDA2(*testing.T){
+func TestZDACreate(t *testing.T){
 	zda := []string {"time","day","month","year","tz"}
-	sentences := map[string][]string {"zda": zda}
+	dpt := []string {"dbt","toff"}
+
+	sentences := map[string][]string {"zda": zda, "dpt": dpt}
 	variables := map[string][]string {
 		 "time": {"hhmmss.ss"},
 		 "day": {"x"},
 		 "month": {"x"},
 		 "year": {"x"},
-		 "tz": {"tz_h", "tz_m"},	   
+		 "tz": {"tz_h", "tz_m"},
+		 "dpt": {},
+		 "toff": {},	   
 		}
 	nm := Create(sentences, variables)
-	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
-	fmt.Println(nm.Data)
+	nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6D")
+	if nm.Data["time"] != "11:09:10.59" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
+	}
+	if nm.Data["day"] != "15" || nm.Data["month"] != "09" ||nm.Data["year"] != "2020" {
+		t.Errorf("Icorrect data got %s %s %s", nm.Data["day"], nm.Data["month"], nm.Data["year"])
+	}
+	if nm.Data["tz"] != "1.50" {
+		t.Errorf("Error TZ time incorrectly parsed got %s", nm.Data["tz"])
+	}
+	// Test loading another create is independant
+	nm2 := Create(sentences, variables)
+	if len(nm2.Data) != 0 || len(nm2.History) !=0 || len(nm.Data) == 0 || len(nm.History) == 0 {
+		t.Errorf("Second Create call failed - check that they are independan ")
+	}
+	
+	//chec
 
 }
