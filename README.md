@@ -194,21 +194,25 @@ A default Config file can be written using default settings:
 
 ### Cleaning up old data
 
-By default Parse and Merge build Sentence data.
+By default Parse and Merge build Sentence data into a Go map called handle.Data
+
 This allows a record of status to be easily maintained for example on a boat application
-simply parsing sentances allows the boat navigation status to be built in handle.Data
+simply parsing all sentences as they are recieved allows the boat navigation status to be updated. This is
+especially useful if the sentences are merged from different devices/inputs
 
-However, there is an issue that if Sentences stop being recieved the Date will be out of date and misleading.
-Typically a devices such as a GPS might loose signal and stop sending position in sentences. The application
-might then report a very old position stored in the Data record.
-To avoid this the package notes when variables are updated and values not updated for sometime can be removed:
+However, there is a risk of being mislead by old data for example devices such as a GPS might loose signal
+and stop sending position in sentences. The application will still see data but the position in handle.Data may be
+dangerously out of date.
 
-    handle.AutoClear(seconds)   // automatically clears variables older than given number of seconds
+To reduce this risk the package notes the time of each variables and old ones deleted:
+
+    handle.AutoClear(seconds, true)   // automatically clears variables older than given number of seconds
+
+use false if your system does not have a real time clock or historic data is being passed and of course the
+messages contain a date.  Set seconds to zero or less to disable auto clear
 
 This is not intended to cope with complete loss of connections when no sentences are Parsed ie for this
-to work some sentances must still be Parsed or a Merge call made.  
-
-Use a negative number of seconds to disable
+to work some sentances must still be Parsed or a Merge calls made.  
 
 ### Different channels
 

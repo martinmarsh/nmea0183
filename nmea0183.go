@@ -12,21 +12,21 @@ import (
 type Config struct {
 	Sentences, Variables map[string][]string
 	Data                 map[string]string
-	History				 map[string]int32
-	Counter				 int32
-	timeWatch			 time.Time
-	timeWatchCount		 int32
-	autoClearPeriod		 int
+	History				 map[string]int64
+	MessageDate			 time.Time
+	UpDated				 time.Time
+	realTime			 bool
+	autoClearPeriod		 int64               // in milliseconds
 }
 
 func setUp() *Config{
 	var c Config
 	c.Data = make(map[string]string)
-	c.History = make(map[string]int32) 
-	c.Counter = 0
-	c.timeWatch = time.Now()
-	c.timeWatchCount = 0
-	c.autoClearPeriod = -1  // Disabled
+	c.History = make(map[string] int64) 
+	c.MessageDate = time.Date(0,1,1,0,0,0,0,time.UTC)
+	c.UpDated = time.Now().UTC()
+	c.realTime = true       // false for historic message processing (or No real time clock) and sentances include a date
+	c.autoClearPeriod = 0  // Disabled
 	return &c
 }
 
@@ -89,44 +89,58 @@ func SaveConfig(setting ...string){
 	}
 }
 
-func (c *Config) DeleteBefore(count int32){
+func (c *Config) DeleteBefore(timeMS int64){
 	/*
-	Deletes variables in data which have a message count less than count parameter
-	if a neagtive value is supplied then the value is releative to current  ie -1000
-	would delete all variables which have not been updated in the last 1000 messages
-
+	Deletes variables in data which have a millisecond time stamp less than timeMS
 	*/
-	if count < 0{
-		count = c.Counter + count
+	var timeNow int64
+
+	if c.realTime {
+		timeNow = time.Now().UTC().UnixMilli()
+	}else{
+		timeNow = c.MessageDate.UnixMilli()
 	}
-	if int32(count) < c.Counter{
-		for i, v := range c.History{
-			if v < count{
+	timeBefore := timeNow-timeMS
+
+	for i, v := range c.History{
+		if v < timeBefore{
 				delete(c.Data, i)
-			}
 		}
 	}
-
 }
 
 func (c *Config) Merge(results map[string]string) {
-	c.Counter ++
-	if c.autoClearPeriod > 0 {
-		if c.timeWatch.After(time.Now().Add(time.Second * time.Duration(c.autoClearPeriod))){
-			c.DeleteBefore(c.timeWatchCount)
-		}
+	var timeStamp int64
+
+	if c.autoClearPeriod > 0 { 
+		c.DeleteBefore(c.autoClearPeriod)
 	}
-	c.timeWatch = time.Now()
-	c.timeWatchCount = c.Counter
+	c.UpDated = time.Now().UTC()
+	if len(results["datetime"]) > 0 {
+		messDate, err := time.Parse(time.RFC3339, results["datetime"])
+		if err == nil {
+			c.MessageDate = messDate
+		}
+	} 
+	if c.realTime {
+		timeStamp = c.UpDated.UnixMilli()
+	}else{
+		timeStamp = c.MessageDate.UnixMilli()
+	}
 
 	for n, v := range results {
 		c.Data[n] = v
-		c.History[n] = c.Counter
+		c.History[n] = timeStamp
 	}
 }
 
-func (c *Config) AutoClear(clear int) {
-	c.autoClearPeriod = clear
+func (c *Config) AutoClear(clear int64, realTime bool) {
+	if clear < 1 {
+		c.autoClearPeriod = 0
+	}else{
+		c.autoClearPeriod = clear * 1000
+	}
+	c.realTime = realTime
 }
 
 func (c *Config) Parse(nmea string) {
@@ -363,15 +377,22 @@ func (c *Config) LatLongToString(latFloat, longFloat float64, params ...string) 
 	}
 
 	latStr, longStr, _ := LatLongToString(latFloat, longFloat)
+    var timeNow int64
+
+	if c.realTime {
+		timeNow = time.Now().UTC().UnixMicro()
+	} else {
+		timeNow = c.MessageDate.UnixMilli()
+	}
 
 	if len(params) == 1 {
 		c.Data[params[0]] = latStr + ", " + longStr
-		c.History[params[0]] = c.Counter
+		c.History[params[0]] = timeNow
 	} else {
 		c.Data[params[0]] = latStr
 		c.Data[params[1]] = longStr
-		c.History[params[0]] = c.Counter
-		c.History[params[1]] = c.Counter
+		c.History[params[0]] = timeNow
+		c.History[params[1]] = timeNow
 	}
 	
 	return nil
