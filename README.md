@@ -79,12 +79,9 @@ eg
 
     func main() {
         // For easy start use built in sentences and variable definitions
-     nm:= nmea0183.Create()
-     if err != nil{
-      fmt.Println("Error config not found")
-     }
+        nm:= nmea0183.Create()
 
-     // Now parse a sentence
+        // Now parse a sentence
         nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 
         // values parsed are merged into a Data map
@@ -120,10 +117,10 @@ Using built in sentences and variables is easy start but has is not configurable
 You can passs your own senatnce definitions instead of using the default ones:
 
     zda := []string {"time","day","month","year","tz"}
- dpt := []string {"dbt","toff"}
+    dpt := []string {"dbt","toff"}
     sentences := map[string][]string {"zda": zda, "dpt": dpt}
 
- nm := Create(sentences)
+    nm := Create(sentences)
     nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6F")
 
 In the above example "zda" refers to any NMEA 0183 sentence starting with a 2 digit manufacturer's code eg
@@ -187,7 +184,11 @@ To read the default nmea_config.yaml file from the working directory do not use 
 
 Can specify location of config file and type eg ymal or json
 
-    handle, err := nmea0183.Load(".", "filename", "ymal") 
+    handle, err := nmea0183.Load(".", "filename", "ymal")
+
+A default Config file can be written using default settings:
+
+    nmea0183..SaveConfig()
 
 ### Different channels
 

@@ -53,9 +53,7 @@ func Load(setting ...string) (*Config, error) {
 
 	viper.SetConfigName(configSet[1]) // name of config file (without extension)
 	viper.SetConfigType(configSet[2]) // REQUIRED if the config file does not have the extension in the name
-
 	viper.AddConfigPath(configSet[0]) // optionally look for config in the working directory
-	//viper.AddConfigPath("..")         // optionally look for config in aprent of the working directory
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {
@@ -75,18 +73,20 @@ func Load(setting ...string) (*Config, error) {
 	return c, err
 }
 
-func SaveConfig(){
-	viper.SetConfigName("nmea_config") // name of config file (without extension)
-	viper.SetConfigType("yaml") // REQUIRED if the config file does not have the extension in the name
-	viper.AddConfigPath(".") // optionally look for config in the working directory
+func SaveConfig(setting ...string){
+	configSet := []string{".", "nmea_config", "yaml"}
+	copy(configSet, setting)
+
+	viper.SetConfigName(configSet[1]) // name of config file (without extension)
+	viper.SetConfigType(configSet[2]) // REQUIRED if the config file does not have the extension in the name
+	viper.AddConfigPath(configSet[0]) // optionally look for config in the working directory
+
 	viper.SetDefault("sentences", GetDefaultSentences())
 	viper.SetDefault("variables", GetDefaultVars())
 	err := viper.ReadInConfig() // Find and read the config file
-
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 		viper.SafeWriteConfig()
 	}
-	
 }
 
 func (c *Config) DeleteBefore(count int32){
