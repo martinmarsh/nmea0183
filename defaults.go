@@ -4,18 +4,19 @@ func GetDefaultVars() *map[string][]string{
     vars := map[string][]string {
         "time": {"hhmmss.ss"},
         "status": {"A"},                 // status of fix A = ok ie 1 V = fail ie 0
-        "lat": {"llll.llll", "NS"},      // formated latitude
-        "long": {"yyyyy.yyyy","WE"},    // formated longitude
-        "position": {"llll.llll", "NS", ",yyyyy.yyyy", "WE"}, //formated lat, long
+        "lat": {"lat", "lat_NS"},      // formated latitude
+        "long": {"long","Long_WE"},    // formated longitude
+        "position": {"lat", "lat_NS", "pos_long", "pos_WE"}, //formated lat, long
         "sog": {"x.x"},                 // Speed Over Ground  float knots
         "tmg": {"x.x"},                 // Track Made Good
         "date": {"ddmmyy"},
         "mag_var": {"x.x", "w"},   // Mag Var E positive, W negative
-        "day": {"x"},
-        "month": {"x"},
-        "year": {"x"},
-        "tz": {"tz_h", "tz_m"},   // Datetime from ZDA if available - tz returns decimal hours as a float
-        "xte": {"x.x", "R"},      // Cross Track Error turn R or L
+        "day": {"DD_day"},
+        "month": {"DD_month"},
+        "year": {"DD_year"},
+        "tz":  {"tz_h", "tz:m"},   // Datetime from ZDA if available - tz:m returns hrs:mins
+        "tzhrs": {"tz_h", "tz_m"},   // Datetime from ZDA if available - tz_m returns decimal hours as a float
+        "xte": {"x.x", "R"},      // Cross Track Error turn R or L eg prefix L12.3
         "xte_units": {"A"},       // Units for XTE - N = Nm
         "acir": {"A"},           // Arrived at way pt circle
         "aper": {"A"},           // Perpendicular passing of way pt

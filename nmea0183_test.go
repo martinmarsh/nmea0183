@@ -75,7 +75,7 @@ func TestZDA(t *testing.T){
 	if nm.Data["day"] != "15" || nm.Data["month"] != "09" ||nm.Data["year"] != "2020" {
 		t.Errorf("Icorrect data got %s %s %s", nm.Data["day"], nm.Data["month"], nm.Data["year"])
 	}
-	if nm.Data["tz"] != "0.00" {
+	if nm.Data["tz"] != "00:00" {
 		t.Errorf("Error TZ time incorrectly parsed got %s", nm.Data["tz"])
 	}
 

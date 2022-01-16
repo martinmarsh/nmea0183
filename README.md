@@ -50,25 +50,19 @@ Features marked with * are under development and refinement, templates are being
 
 ### Assuming you have installed go and are outide of GOPATH
 
+    install go on your system
+
     go mod init  your_module
     go get github.com/martinmarsh/nmea0183
-    go get github.com/spf13/viper
 
-    from download in GOPATH or from git hub either:
-        copy /example/main to same directory to same directory as go.mod
-        copy nmea_config.yaml to same directory as main.go
-    or 
-        write main as shown below:
+    write a main file as shown below or copy /example/main.go:
 
     go install your_module
- 
-    run your code
 
 ### Basic use
 
-See main.go in example
-
-eg
+To start write the following in main.go in your modules root directory 
+a copy of this file is in demo/main.go
 
     package main
 
@@ -206,9 +200,9 @@ dangerously out of date.
 
 To reduce this risk the package notes the time of each variables and old ones deleted:
 
-    handle.AutoClear(seconds, true)   // automatically clears variables older than given number of seconds
+    handle.Preferences(seconds, real_time)   // seconds is time to keep variables or <= 0 is forever, real time mode true or false
 
-use false if your system does not have a real time clock or historic data is being passed and of course the
+use real_time = false if your system does not have a real time clock or historic data is being passed and of course the
 messages contain a date.  Set seconds to zero or less to disable auto clear
 
 This is not intended to cope with complete loss of connections when no sentences are Parsed ie for this

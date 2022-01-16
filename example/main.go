@@ -19,7 +19,7 @@ func main() {
 	}
 
 	// set time period in seconds to remove old values (<= 0 to disable) and if real time processing
-	nm.AutoClear(60, true)
+	nm.Preferences(60, true)
 
 	// use returned handle to Parse NMEA statements
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")

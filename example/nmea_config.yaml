@@ -63,7 +63,7 @@ variables:
   date:
   - ddmmyy
   day:
-  - x
+  - DD_day
   dbt:
   - x.x
   did:
@@ -77,21 +77,21 @@ variables:
   hts_true:
   - T
   lat:
-  - llll.llll
-  - NS
+  - lat
+  - lat_NS
   long:
-  - yyyyy.yyyy
-  - WE
+  - long
+  - Long_WE
   mag_var:
   - x.x
   - w
   month:
-  - x
+  - DD_month
   position:
-  - llll.llll
-  - NS
-  - ',yyyyy.yyyy'
-  - WE
+  - lat
+  - lat_NS
+  - pos_long
+  - pos_WE
   sog:
   - x.x
   status:
@@ -106,6 +106,9 @@ variables:
   - x.x
   tz:
   - tz_h
+  - tz:m
+  tzhrs:
+  - tz_h
   - tz_m
   xte:
   - x.x
@@ -113,4 +116,4 @@ variables:
   xte_units:
   - A
   year:
-  - x
+  - DD_year

@@ -116,12 +116,7 @@ func (c *Config) Merge(results map[string]string) {
 		c.DeleteBefore(c.autoClearPeriod)
 	}
 	c.UpDated = time.Now().UTC()
-	if len(results["datetime"]) > 0 {
-		messDate, err := time.Parse(time.RFC3339, results["datetime"])
-		if err == nil {
-			c.MessageDate = messDate
-		}
-	} 
+	
 	if c.realTime {
 		timeStamp = c.UpDated.UnixMilli()
 	}else{
@@ -134,7 +129,7 @@ func (c *Config) Merge(results map[string]string) {
 	}
 }
 
-func (c *Config) AutoClear(clear int64, realTime bool) {
+func (c *Config) Preferences(clear int64, realTime bool) {
 	if clear < 1 {
 		c.autoClearPeriod = 0
 	}else{
@@ -143,13 +138,26 @@ func (c *Config) AutoClear(clear int64, realTime bool) {
 	c.realTime = realTime
 }
 
-func (c *Config) Parse(nmea string) {
+var dateTypeTemplates = []string {"day", "month", "year", "date", "time", "zone"}
+
+func (c *Config) Parse(nmea string) (string, string, error){
+	data, preFix, postFix, error := c.ParseToMap(nmea)
+	if error == nil{
+		c.Merge(data)
+	}
+	return preFix, postFix, error
+}
+
+
+func (c *Config) ParseToMap(nmea string)  (map[string]string, string, string, error){
 	end_byte := len(nmea)
+	var err error
 	if nmea[end_byte-3] == '*' {
 		check_code := checksum(nmea)
 		end_byte -= 2
 		if check_code != nmea[end_byte:] {
-			fmt.Printf("check sum error: %s != %s\n", check_code, nmea[end_byte:])
+			err_mess := fmt.Sprintf("error: %s != %s", check_code, nmea[end_byte:])
+			err = fmt.Errorf("check sum error: %s", err_mess)
 		}
 		end_byte--
 	}
@@ -158,109 +166,207 @@ func (c *Config) Parse(nmea string) {
 	preFix := parts[0][:2]
 	sentenceType := strings.ToLower(parts[0][2:])
 	key, varList := findInMap(sentenceType, c.Sentences)
-	results := map[string]string{"device": preFix, "sentence": sentenceType}
+	results := make(map[string]string)
+	date := ""
+	dateTypes := make(map[string]string)
 
 	if len(key) > 0 {
 		fieldPointer := 1
-
+		var typeStr string
 		for varPointer := 0; varPointer < len(varList); varPointer++ {
 			varName, templateList := findInMap(varList[varPointer], c.Variables)
 			conVar := ""
+			typeStr = ""
 			if len(varName) > 0 {
 				for _, template := range templateList {
-					conVar = convert(parts[fieldPointer], template, conVar)
+					conVar, typeStr = convert(parts[fieldPointer], template, conVar)
 					fieldPointer++
+				}
+				for _, v := range dateTypeTemplates {
+					if v == typeStr {
+						dateTypes[v] = conVar
+					}
 				}
 				results[varName] = conVar
 			} else {
 				fieldPointer++
 			}
 		}
+		if len(dateTypes) > 1 {
+			if date_found, ok := dateTypes["date"]; ok {
+				date = date_found 
+			}
+			if day, ok := dateTypes["day"]; ok {
+				if month, ok := dateTypes["month"]; ok 	{
+					if year, ok := dateTypes["year"]; ok {
+						d, _ := strconv.ParseInt(day, 10, 32)
+						m, _ := strconv.ParseInt(month, 10, 32)
+						y, _ := strconv.ParseInt(year, 10, 32)
+						if y < 60 {
+							y += 2000
+						} else {
+							y += 1900
+						}
+						date = fmt.Sprintf("%d-%02d-%02d", y, m, d)
+					}
+				}
+			}
+			if len(date) > 0 {
+				if timeT, ok := dateTypes["time"]; ok {
+					dateTime := date + "T" + timeT
+					zone := "00:00"
+					if z, ok := dateTypes["zone"]; ok {
+						zone = z
+					}
+					rcDate := dateTime + "+" + zone	
+					messageDate, err := time.Parse(time.RFC3339, rcDate)
+					if err == nil{
+						c.MessageDate = messageDate
+						results["datetime"] = rcDate
+
+					}
+				}	
+			}
+		}
 	}
-	c.Merge(results)
+	return results,  preFix, sentenceType, err
 }
 
-func convert(data string, template string, conVar string) string {
+func timeConv(data string) string{
+	h, e := strconv.ParseInt(data[:2], 10, 16)
+	m, e1 := strconv.ParseInt(data[2:4], 10, 16)
+	s, e2 := strconv.ParseFloat(data[4:], 32)
+	if e == nil && e1 == nil && e2 == nil {
+		return fmt.Sprintf("%02d:%02d:%02.2f", h, m, s)
+	}
+	return ""
+}
+
+func convert(data string, template string, conVar string) (string, string) {
 	switch template {
 	case "hhmmss.ss":
-		h, e := strconv.ParseInt(data[:2], 10, 16)
-		m, e1 := strconv.ParseInt(data[2:4], 10, 16)
-		s, e2 := strconv.ParseFloat(data[4:], 32)
-		if e == nil && e1 == nil && e2 == nil {
-			return conVar + fmt.Sprintf("%02d:%02d:%02.2f", h, m, s)
+		t := timeConv(data)
+		if len(t) > 0{
+			return conVar + t, "time"
 		}
-		return ""
+		return "", ""
+
+	case "plan_hhmmss.ss":
+		t := timeConv(data)
+		if len(t) > 0{
+			return conVar + t, "plan_time"
+		}
+		return "", ""
+	case "DD_day":
+		return data, "day"
+	case "DD_month":
+		return data, "month"
+	case "DD_year":
+		return data, "plan_year"
+	case "DD_day_plan":
+		return data, "plan_day"
+	case "DD_month_plan":
+		return data, "plan_month"
+	case "DD_year_plan":
+		return data, "plan_year"
 	case "x.x":
-		return data
+		return data, "float"
 	case "x":
-		return data
+		return data, "int"
 	case "tz_h":
-		return data
+		return data, "tzh"
 	case "tz_m":
 		h, e := strconv.ParseFloat(conVar, 32)
 		m, e1 := strconv.ParseFloat(data, 32)
 		if e == nil && e1 == nil {
 			h += m / 60
-			return fmt.Sprintf("%02.2f", h)
+			return fmt.Sprintf("%02.2f", h), "tzfloat"
 		}
+	case "tz:m":
+		return conVar + ":" + data, "zone"
+	case "plan_tz:m":
+		return conVar + ":" + data, "plan_zone"
+	
 	case "A":
-		return data
+		return data, "A"
 
 	case "str":
-		return data
+		return data, "str"
 
 	case "T":
-		return data
+		return data, "T"
 
 	case "w":
 		if data == "W" || data == "w" {
-			return "-" + conVar
+			return "-" + conVar, "float"
 		}
-		return conVar
+		return conVar, "west"
 
 	case "s":
 		if data == "S" || data == "s" {
-			return "-" + conVar
+			return "-" + conVar, "float"
 		}
-		return conVar
+		return conVar, "south"
 
 	case "R":
-		return data + conVar
+		return data + conVar, "xte"
 
-	case "llll.llll":
+	case "lat":
 		d, _ := strconv.ParseInt(data[:2], 10, 32)
 		m, _ := strconv.ParseFloat(data[2:], 32)
-		return fmt.Sprintf("%02d° %02.4f'", d, m)
+		return fmt.Sprintf("%02d° %02.4f'", d, m), ""
 
-	case "yyyyy.yyyy":
+	case "long":
 		d, _ := strconv.ParseInt(data[:3], 10, 32)
 		m, _ := strconv.ParseFloat(data[3:], 32)
-		return fmt.Sprintf("%03d° %02.4f'", d, m)
+		return fmt.Sprintf("%03d° %02.4f'", d, m), ""
 	
-	case ",yyyyy.yyyy":
+	case "pos_long":
 		d, _ := strconv.ParseInt(data[:3], 10, 32)
 		m, _ := strconv.ParseFloat(data[3:], 32)
-		return conVar + ", " + fmt.Sprintf("%03d° %02.4f'", d, m)
+		return conVar + ", " + fmt.Sprintf("%03d° %02.4f'", d, m), ""
 
-	case "WE":
-		return conVar + data
+	case "lat_WE":
+		return conVar + data, "long"
+	
+	case "pos_WE":
+		return conVar + data, "position"
 
-	case "NS":
-		return conVar + data
+	case "lat_NS":
+		return conVar + data, "lat"
 
 	case "ddmmyy":
-		d, _ := strconv.ParseInt(data[:2], 10, 32)
-		m, _ := strconv.ParseInt(data[2:4], 10, 32)
-		y, _ := strconv.ParseInt(data[4:], 10, 32)
-		if y < 60 {
-			y += 2000
-		} else {
-			y += 1900
+		date, err := DateSteFromStrs(data[:2], data[2:4], data[4:])
+		if err == nil {
+			return date, "date"
 		}
-		return fmt.Sprintf("%d-%02d-%02d", y, m, d)
+		return "", ""
 
+	case "plan_ddmmyy":
+		date, err := DateSteFromStrs(data[:2], data[2:4], data[4:])
+		if err == nil {
+			return date, "plan_date"
+		}
+		return "", ""
+}
+	return "", ""
+}
+
+func DateSteFromStrs(day, month, year string) (string, error){
+	var err error
+	err = nil
+	d, e1 := strconv.ParseInt(day, 10, 32)
+	m, e2 := strconv.ParseInt(month, 10, 32)
+	y, e3 := strconv.ParseInt(year, 10, 32)
+	if e1 != nil || e2 != nil || e3 != nil{
+		err = fmt.Errorf("conversion error")
 	}
-	return ""
+	if y < 60 {
+		y += 2000
+	} else {
+		y += 1900
+	}
+	return fmt.Sprintf("%d-%02d-%02d", y, m, d), err
 }
 
 func checksum(s string) string {
