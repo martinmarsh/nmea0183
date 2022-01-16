@@ -13,7 +13,9 @@ func main() {
 	// Load config file from working directory or create an example one if not found
 	nm, err := nmea0183.Load()
 	if err != nil{
-		fmt.Println("Error config not found")
+		fmt.Println(fmt.Errorf("**** Error config: %w", err))
+		nmea0183.SaveConfig()
+		nm = nmea0183.Create()
 	}
 
 	// use returned handle to Parse NMEA statements

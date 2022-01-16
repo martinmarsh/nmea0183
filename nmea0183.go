@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"math"
-	"os"
 	"time"
 	"strconv"
 	"strings"
@@ -56,22 +55,13 @@ func Load(setting ...string) (*Config, error) {
 	viper.SetConfigType(configSet[2]) // REQUIRED if the config file does not have the extension in the name
 
 	viper.AddConfigPath(configSet[0]) // optionally look for config in the working directory
-	viper.AddConfigPath("..")         // optionally look for config in aprent of the working directory
+	//viper.AddConfigPath("..")         // optionally look for config in aprent of the working directory
 
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found and looked for yaml type trying writing a default one
-			if configSet[2] == "yaml" {
-				os.WriteFile(configSet[0]+"/"+configSet[1]+".yaml", yamlExample, 0644)
-
-				err = viper.ReadInConfig()
-				if err != nil {
-					err = fmt.Errorf("fatal error in config file: %w", err)
-					return c, err
-				}
-			}
-
+			err = fmt.Errorf("config file was not found. Use Create or download nmea_config.yaml: %w", err)
+			return c, err
 		} else {
 			// Config file was found but another error was produced
 			err = fmt.Errorf("fatal error in config file: %w", err)
@@ -83,6 +73,20 @@ func Load(setting ...string) (*Config, error) {
 	c.Variables = viper.GetStringMapStringSlice("variables")
 	c.Data = make(map[string]string)
 	return c, err
+}
+
+func SaveConfig(){
+	viper.SetConfigName("nmea_config") // name of config file (without extension)
+	viper.SetConfigType("yaml") // REQUIRED if the config file does not have the extension in the name
+	viper.AddConfigPath(".") // optionally look for config in the working directory
+	viper.SetDefault("sentences", GetDefaultSentences())
+	viper.SetDefault("variables", GetDefaultVars())
+	err := viper.ReadInConfig() // Find and read the config file
+
+	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		viper.SafeWriteConfig()
+	}
+	
 }
 
 func (c *Config) DeleteBefore(count int32){

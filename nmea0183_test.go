@@ -7,7 +7,7 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-    _, e := Load()
+    _, e := Load("./example")
 	if e != nil {
 		errStr := fmt.Errorf("Config failed with error: %w", e)
 		t.Error(errStr)
@@ -67,7 +67,7 @@ func TestConvetFloatLatLong(t *testing.T) {
 }
 
 func TestZDA(t *testing.T){
-	nm, _ := Load()
+	nm, _ := Load("./example")
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 	if nm.Data["time"] != "11:09:10.59" {
 		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
