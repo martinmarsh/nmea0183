@@ -188,7 +188,27 @@ Can specify location of config file and type eg ymal or json
 
 A default Config file can be written using default settings:
 
-    nmea0183..SaveConfig()
+    nmea0183.SaveConfig()
+    or
+    nmea0183.SaveConfig(".", "filename", "ymal")
+
+### Cleaning up old data
+
+By default Parse and Merge build Sentence data.
+This allows a record of status to be easily maintained for example on a boat application
+simply parsing sentances allows the boat navigation status to be built in handle.Data
+
+However, there is an issue that if Sentences stop being recieved the Date will be out of date and misleading.
+Typically a devices such as a GPS might loose signal and stop sending position in sentences. The application
+might then report a very old position stored in the Data record.
+To avoid this the package notes when variables are updated and values not updated for sometime can be removed:
+
+    handle.AutoClear(seconds)   // automatically clears variables older than given number of seconds
+
+This is not intended to cope with complete loss of connections when no sentences are Parsed ie for this
+to work some sentances must still be Parsed or a Merge call made.  
+
+Use a negative number of seconds to disable
 
 ### Different channels
 
