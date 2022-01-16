@@ -5,11 +5,41 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run example",
+            "name": "test coverage",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": ".",
+            "args": [
+                "-test.coverprofile",
+                "coverage_report"
+            ]
+        },
+       
+        {
+            "name": "verbose test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": ".",
+            "args": [
+                "-test.v"
+            ]
+        },
+        {
+            "name": "Run from example",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "example/main.go"
+        },
+        {
+            "name": "Run from demo",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "demo/main.go"
         }
     ]
+
 }
