@@ -154,16 +154,16 @@ Here is an example of variables which you could set to use instead of the defaul
         "lat": {"llll.lll", "NS"},
         "long": {"yyyyy.yyyy","WE"},
         "position": {"llll.lll", "NS", "yyyyy.yyyy", "WE"},
-   "day": {"x"},
-   "month": {"x"},
-   "year": {"x"},
-   "tz": {"tz_h", "tz_m"},
-   "dpt": {},
-   "toff": {},
-    }
-    nm := Create(sentences, variables)
-    nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6F")
-    nm.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75")
+        "day": {"x"},
+        "month": {"x"},
+        "year": {"x"},
+        "tz": {"tz_h", "tz_m"},
+        "dpt": {},
+        "toff": {},
+        }
+        nm := Create(sentences, variables)
+        nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6F")
+        nm.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75")
 
 In the above example "pos_time" maps to built in format "hhmmss.ss" and so does "zda_time"
 On parsing the strings the above 2 strings you will get both nm.Data["pos_time"] and nm.Data["zda_time"].
