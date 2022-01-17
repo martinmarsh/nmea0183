@@ -534,3 +534,47 @@ func LatLongToString(latFloat, longFloat float64) (string, string, error) {
 
 	return lat, long, nil
 }
+
+
+func (c *Config) WriteSentence(manCode string, sentenceName string) (string, error) {
+	sentenceType := strings.ToLower(sentenceName)
+	key, varList := findInMap(sentenceType, c.Sentences)
+	madeSentence := strings.ToUpper(manCode + sentenceName)
+
+	if len(key) > 1 {
+		for _, v := range varList {
+			if value, ok := c.Data[v]; ok {
+				if len(v) == 0 || v == "n/a"{
+					madeSentence += ","
+				}else{
+					m, err := getSentencePart(value, varList)
+					if err != nil{
+						return "", fmt.Errorf("field error definition %w", err)
+					}
+					madeSentence += "," + m 
+				}
+			}else{
+				for i:=0; i<len(varList); i++{
+					madeSentence += ","
+				}
+			}
+            
+
+		}
+
+		checksum := checksum(madeSentence)
+		madeSentence = "$" + madeSentence + "*" + checksum
+		return madeSentence, nil
+	}
+	return "", fmt.Errorf("no matching sentence definition")
+}
+
+func getSentencePart(value string, varList []string) (string, error){
+	subString := ""
+	for _, v := range varList{
+		fmt.Println(v)
+
+	}
+
+	return subString, nil
+}

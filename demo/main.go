@@ -38,4 +38,7 @@ nm.Parse("$SSDPT,2.8,-0.7")
 //Data is built and updated as sentences are parsed
 fmt.Println(nm.Data)
 
+gprmc, _ := nm.WriteSentence("gp", "rmc")
+fmt.Println(gprmc)
+
 }
