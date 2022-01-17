@@ -336,14 +336,14 @@ func convert(data string, template string, conVar string) (string, string) {
 		return conVar + data, "lat"
 
 	case "ddmmyy":
-		date, err := DateSteFromStrs(data[:2], data[2:4], data[4:])
+		date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
 		if err == nil {
 			return date, "date"
 		}
 		return "", ""
 
 	case "plan_ddmmyy":
-		date, err := DateSteFromStrs(data[:2], data[2:4], data[4:])
+		date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
 		if err == nil {
 			return date, "plan_date"
 		}
@@ -352,7 +352,7 @@ func convert(data string, template string, conVar string) (string, string) {
 	return "", ""
 }
 
-func DateSteFromStrs(day, month, year string) (string, error){
+func DateStrFromStrs(day, month, year string) (string, error){
 	var err error
 	err = nil
 	d, e1 := strconv.ParseInt(day, 10, 32)
