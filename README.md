@@ -1,10 +1,10 @@
 # nmea0183
 
-## Externally configurable nmea0183 sentence analyser in a go package
+## Post build configurable NMEA 0183 sentence analyser and writer in a go package
 
 ### Reason to choose
 
-- Configurable Sentences definitions and variables either in build or via external yaml or json files
+- Configurable Sentences definitions and variables either built in or via external yaml/json/toml files
 - Collects data across sentences to merge into one results set
 - Keeps results as strings for ease of logging, communication and visualisation
 - Handles Removing old data
@@ -13,6 +13,7 @@
 
 - Do not want to look at your sentences to define parsing config and own variable names
 - Want a solution that collects data into pre-defined structures
+- Need to parse more easily multiple line sentences
 
 ### Current Status
 
@@ -39,6 +40,7 @@ Features marked with * are under development and refinement, templates are being
 ### Limitations
 
 - No plans to support AIS
+- 
 - Only supports comma delimited fields and messages starting with $
 - Limited to passing sentence fields which match built in templates
 

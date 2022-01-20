@@ -30,7 +30,7 @@ fmt.Printf("%f %f\n",latFloat, longFloat)
 nm.LatLongToString(latFloat, longFloat, "new_position")
 fmt.Println(nm.Data["new_position"])
 
-//examples of other sentances passed
+//examples of other sentances parsed
 nm.Parse("$HCHDM,172.5,M*28")
 nm.Parse("$GPAPB,A,A,5,L,N,V,V,359.,T,1,359.1,T,6,T,A*7C")
 nm.Parse("$SSDPT,2.8,-0.7")
@@ -40,5 +40,17 @@ fmt.Println(nm.Data)
 
 gprmc, _ := nm.WriteSentence("gp", "rmc")
 fmt.Println(gprmc)
+
+hdm, _ := nm.WriteSentence("hc", "hdm")
+fmt.Println(hdm)
+
+apb, _ := nm.WriteSentence("gp", "apb")
+fmt.Println(apb)
+
+dpt, _ := nm.WriteSentence("ss", "dpt")
+fmt.Println(dpt)
+
+zda, _ := nm.WriteSentence("gp", "zda")
+fmt.Println(zda)
 
 }

@@ -2,10 +2,16 @@ package nmea0183
 
 func GetDefaultVars() *map[string][]string{
     vars := map[string][]string {
+        "arrived_circle": {"A"},
+        "passed_waypt": {"A"},
+        "arrival_radius": {"x.x"},
+        "radius_units":{"A"},
+        "waypt_id": {"str"},
+
         "time": {"hhmmss.ss"},
         "status": {"A"},                 // status of fix A = ok ie 1 V = fail ie 0
         "lat": {"lat", "lat_NS"},      // formated latitude
-        "long": {"long","Long_WE"},    // formated longitude
+        "long": {"long","long_WE"},    // formated longitude
         "position": {"lat", "lat_NS", "pos_long", "pos_WE"}, //formated lat, long
         "sog": {"x.x"},                 // Speed Over Ground  float knots
         "tmg": {"x.x"},                 // Track Made Good
@@ -28,8 +34,9 @@ func GetDefaultVars() *map[string][]string{
         "hts": {"x.x"},
         "hts_true": {"T"},        // Heading to Steer True
         "hdm": {"x.x"},          // Heading Magnetic
+        "hdm_true": {"T"},      // heading true or Manetic
         "dbt": {"x.x"},          // Depth below transducer
-        "toff": {"x.x"},         // Transducer offset -ve from transducer to keel +ve transducer to water line
+        "toff": {"-x.x"},         // Transducer offset -ve from transducer to keel +ve transducer to water line
         "stw": {"x.x"},          // Speed Through Water float knots
         "dw":  {"x.x"},          // Water distance since reset float knots
        
@@ -40,11 +47,13 @@ func GetDefaultVars() *map[string][]string{
 
 func GetDefaultSentences() *map[string][]string{
     sent := map[string][]string {
+        "aam": {"arrived_circle", "passed_waypt", "arrival_radius", "radius_units", "waypt_id"},
+
         "rmc": {"time", "status", "position", "sog", "tmg", "date", "mag_var"},
         "zda": {"time", "day", "month", "year", "tz"},
         "apb": {"status","n/a", "xte","xte_units","acir", "aper", "bod", "bod_true", "did", "bpd", "bpd_true", "hts","hts_true"},
         "hdg": {"n/a", "n/a", "n/a", "mag_var"},
-        "hdm": {"hdm"}, 
+        "hdm": {"hdm", "hdm_true"}, 
         "dpt": {"dbt", "toff"},
         "vhm": {"n/a", "n/a", "n/a", "n/a", "stw"},
         "vlw": {"n/a", "n/a", "wd"},

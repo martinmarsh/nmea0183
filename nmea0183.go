@@ -153,7 +153,7 @@ func (c *Config) ParseToMap(nmea string)  (map[string]string, string, string, er
 	end_byte := len(nmea)
 	var err error
 	if nmea[end_byte-3] == '*' {
-		check_code := checksum(nmea)
+		check_code := checksum(nmea[:end_byte-3])
 		end_byte -= 2
 		if check_code != nmea[end_byte:] {
 			err_mess := fmt.Sprintf("error: %s != %s", check_code, nmea[end_byte:])
@@ -244,111 +244,111 @@ func timeConv(data string) string{
 
 func convert(data string, template string, conVar string) (string, string) {
 	switch template {
-	case "hhmmss.ss":
-		t := timeConv(data)
-		if len(t) > 0{
-			return conVar + t, "time"
-		}
-		return "", ""
+		case "hhmmss.ss":
+			t := timeConv(data)
+			if len(t) > 0{
+				return conVar + t, "time"
+			}
+			return "", ""
 
-	case "plan_hhmmss.ss":
-		t := timeConv(data)
-		if len(t) > 0{
-			return conVar + t, "plan_time"
-		}
-		return "", ""
-	case "DD_day":
-		return data, "day"
-	case "DD_month":
-		return data, "month"
-	case "DD_year":
-		return data, "plan_year"
-	case "DD_day_plan":
-		return data, "plan_day"
-	case "DD_month_plan":
-		return data, "plan_month"
-	case "DD_year_plan":
-		return data, "plan_year"
-	case "x.x":
-		return data, "float"
-	case "x":
-		return data, "int"
-	case "tz_h":
-		return data, "tzh"
-	case "tz_m":
-		h, e := strconv.ParseFloat(conVar, 32)
-		m, e1 := strconv.ParseFloat(data, 32)
-		if e == nil && e1 == nil {
-			h += m / 60
-			return fmt.Sprintf("%02.2f", h), "tzfloat"
-		}
-	case "tz:m":
-		return conVar + ":" + data, "zone"
-	case "plan_tz:m":
-		return conVar + ":" + data, "plan_zone"
-	
-	case "A":
-		return data, "A"
+		case "plan_hhmmss.ss":
+			t := timeConv(data)
+			if len(t) > 0{
+				return conVar + t, "plan_time"
+			}
+			return "", ""
+		case "DD_day":
+			return data, "day"
+		case "DD_month":
+			return data, "month"
+		case "DD_year":
+			return data, "plan_year"
+		case "DD_day_plan":
+			return data, "plan_day"
+		case "DD_month_plan":
+			return data, "plan_month"
+		case "DD_year_plan":
+			return data, "plan_year"
+		case "x.x", "-x.x":
+			return data, "float"
+		case "x":
+			return data, "int"
+		case "tz_h":
+			return data, "tzh"
+		case "tz_m":
+			h, e := strconv.ParseFloat(conVar, 32)
+			m, e1 := strconv.ParseFloat(data, 32)
+			if e == nil && e1 == nil {
+				h += m / 60
+				return fmt.Sprintf("%02.2f", h), "tzfloat"
+			}
+		case "tz:m":
+			return conVar + ":" + data, "zone"
+		case "plan_tz:m":
+			return conVar + ":" + data, "plan_zone"
+		
+		case "A":
+			return data, "A"
 
-	case "str":
-		return data, "str"
+		case "str":
+			return data, "str"
 
-	case "T":
-		return data, "T"
+		case "T":
+			return data, "T"
 
-	case "w":
-		if data == "W" || data == "w" {
-			return "-" + conVar, "float"
-		}
-		return conVar, "west"
+		case "w":
+			if data == "W" || data == "w" {
+				return "-" + conVar, "float"
+			}
+			return conVar, "west"
 
-	case "s":
-		if data == "S" || data == "s" {
-			return "-" + conVar, "float"
-		}
-		return conVar, "south"
+		case "s":
+			if data == "S" || data == "s" {
+				return "-" + conVar, "float"
+			}
+			return conVar, "south"
 
-	case "R":
-		return data + conVar, "xte"
+		case "R":
+			return data + conVar, "xte"
 
-	case "lat":
-		d, _ := strconv.ParseInt(data[:2], 10, 32)
-		m, _ := strconv.ParseFloat(data[2:], 32)
-		return fmt.Sprintf("%02d° %02.4f'", d, m), ""
+		case "lat":
+			d, _ := strconv.ParseInt(data[:2], 10, 32)
+			m, _ := strconv.ParseFloat(data[2:], 32)
+			return fmt.Sprintf("%02d° %02.4f'", d, m), ""
 
-	case "long":
-		d, _ := strconv.ParseInt(data[:3], 10, 32)
-		m, _ := strconv.ParseFloat(data[3:], 32)
-		return fmt.Sprintf("%03d° %02.4f'", d, m), ""
-	
-	case "pos_long":
-		d, _ := strconv.ParseInt(data[:3], 10, 32)
-		m, _ := strconv.ParseFloat(data[3:], 32)
-		return conVar + ", " + fmt.Sprintf("%03d° %02.4f'", d, m), ""
+		case "long":
+			d, _ := strconv.ParseInt(data[:3], 10, 32)
+			m, _ := strconv.ParseFloat(data[3:], 32)
+			return fmt.Sprintf("%03d° %02.4f'", d, m), ""
+		
+		case "pos_long":
+			d, _ := strconv.ParseInt(data[:3], 10, 32)
+			m, _ := strconv.ParseFloat(data[3:], 32)
+			return conVar + ", " + fmt.Sprintf("%03d° %02.4f'", d, m), ""
 
-	case "lat_WE":
-		return conVar + data, "long"
-	
-	case "pos_WE":
-		return conVar + data, "position"
+		case "long_WE":
+			return conVar + data, "long"
+		
+		case "pos_WE":
+			return conVar + data, "position"
 
-	case "lat_NS":
-		return conVar + data, "lat"
+		case "lat_NS":
+			return conVar + data, "lat"
 
-	case "ddmmyy":
-		date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
-		if err == nil {
-			return date, "date"
-		}
-		return "", ""
+		case "ddmmyy":
+			date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
+			if err == nil {
+				return date, "date"
+			}
+			return "", ""
 
-	case "plan_ddmmyy":
-		date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
-		if err == nil {
-			return date, "plan_date"
-		}
-		return "", ""
-}
+		case "plan_ddmmyy":
+			date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
+			if err == nil {
+				return date, "plan_date"
+			}
+			return "", ""
+	}
 	return "", ""
 }
 
@@ -374,7 +374,7 @@ func checksum(s string) string {
 
 	nmea_data := []byte(s)
 
-	for i := 1; i < len(s)-3; i++ {
+	for i := 1; i < len(s); i++ {
 		check_sum ^= (int)(nmea_data[i])
 	}
 
@@ -543,38 +543,143 @@ func (c *Config) WriteSentence(manCode string, sentenceName string) (string, err
 
 	if len(key) > 1 {
 		for _, v := range varList {
+			_, vFormats := findInMap(v, c.Variables)
 			if value, ok := c.Data[v]; ok {
 				if len(v) == 0 || v == "n/a"{
 					madeSentence += ","
-				}else{
-					m, err := getSentencePart(value, varList)
+				}else if len(value) >0 {
+					m, err := getSentencePart(value, vFormats)
 					if err != nil{
 						return "", fmt.Errorf("field error definition %w", err)
 					}
-					madeSentence += "," + m 
+					madeSentence += m 
 				}
 			}else{
-				for i:=0; i<len(varList); i++{
+				for i:=0; i<len(vFormats); i++{
 					madeSentence += ","
 				}
 			}
             
 
 		}
-
+		madeSentence = "$" + madeSentence
 		checksum := checksum(madeSentence)
-		madeSentence = "$" + madeSentence + "*" + checksum
+		madeSentence += "*" + checksum
 		return madeSentence, nil
 	}
 	return "", fmt.Errorf("no matching sentence definition")
 }
 
-func getSentencePart(value string, varList []string) (string, error){
+func getSentencePart(data string, varItems []string) (string, error){
 	subString := ""
-	for _, v := range varList{
-		fmt.Println(v)
-
+	lookForward := ""
+	for _, template := range varItems{
+		value, _ :=convertTo183(data, template, lookForward)
+		subString += "," + value
 	}
 
 	return subString, nil
+}
+
+
+func convertTo183(data, template string, forward string) (string, string) {
+	switch template {
+		case "hhmmss.ss", "plan_hhmmss.ss":
+			return data[:2]+data[3:5]+data[6:], ""
+	
+		case "DD_day":
+			return data, "day"
+		case "DD_month":
+			return data, "month"
+		case "DD_year":
+			return data, "plan_year"
+		case "DD_day_plan":
+			return data, "plan_day"
+		case "DD_month_plan":
+			return data, "plan_month"
+		case "DD_year_plan":
+			return data, "plan_year"
+		case "x.x":	
+			if data[0] >= '0' && data[0] <= '9'{
+				return data, "float"
+			}
+			return data[1:], "float"
+		case "-x.x":
+			return data, "float"
+		case "x":
+			return data, "int"
+		case "tz_h":
+			return data[:2], "tzh"
+
+		case "tz_m":
+			m, e := strconv.ParseFloat(data[3:], 32)
+			if e == nil {
+				m *= 60
+				return fmt.Sprintf("%02.2f", m), "tzfloat"
+			}
+
+		case "tz:m":
+			return data[3:], "zone"
+
+		case "plan_tz:m":
+			return data[3:], "plan_zone"
+		
+		case "A":
+			return data, "A"
+		case "w":
+			if data[0] == '-' {
+				return "W", "west"
+			}
+			return "E", "west"
+		case "s":
+			if data[0] == '-' {
+				return "S", "south"
+			}
+			return "N", "south"
+		
+		case "R":
+			if data[0] == 'R' {
+				return "R", "LR"
+			}
+			return "L", "LR"
+
+		case "str":
+			return data, "str"
+
+		case "T":
+			return data, "T"
+
+		case "lat":
+			split :=  strings.SplitN(data[4:], ",", 2)
+			l := len(split[0]) - 2
+			return data[:2] + split[0][1:l], ""
+
+		case "long":
+			l := len(data) - 2
+			return data[:3] + data[5:l], ""
+
+		case "pos_long":
+			split :=  strings.SplitN(data[5:], ",", 2)
+			l := len(split[1]) - 2
+			return split[1][1:4] + split[1][7:l], ""
+
+		case "long_WE":
+			l := len(data)-1
+			return string(data[l]), ""
+	
+		case "pos_WE":
+			split :=  strings.SplitN(data[5:], ",", 2)
+			l := len(split[1])-1
+			return string(split[1][l]), ""
+
+		case "lat_NS":
+			split :=  strings.SplitN(data[4:], ",", 2)
+			l := len(split[0])-1
+			return string(split[0][l]), ""
+			
+		case "ddmmyy", "plan_ddmmyy":
+			
+			return data[8:] + data[5:7] + data[2:4], ""
+	}
+	return "", ""
 }

@@ -6,6 +6,21 @@ import (
 	"math"
 )
 
+func verify_sentence(sentence string, t *testing.T){
+	nm:= Create()
+	preFix, postFix, err := nm.Parse(sentence)
+	if err != nil {
+		t.Error("parsing input sentence error: %w", err)
+	}
+	ret_sentence, err := nm.WriteSentence(preFix, postFix)
+	if err != nil{
+		t.Error("writing output sentence error: %w", err)
+	}
+	if sentence != ret_sentence{
+		t.Error(fmt.Errorf("parsed sentence not equal write sentence : %s != %s", sentence, ret_sentence))
+	}
+}
+
 func TestConfig(t *testing.T) {
     _, e := Load("./example")
 	if e != nil {
@@ -15,16 +30,22 @@ func TestConfig(t *testing.T) {
 }
 
 func TestCheckSum(t *testing.T) {	
-	check := checksum("$1111111*45")
-	expect := "31"
+	check := checksum("$9")
+	expect := "39"
 	if check != expect {
 		t.Errorf("CheckSum was incorrect, got: %s, should be: %s.", check, expect)
 	}
 
-	check2 := checksum("$111111*45")
+	check2 := checksum("$99")
 	expect2 := "00"
 	if check2 != expect2 {
 		t.Errorf("CheckSum with even ones incorrect, got: %s, should be: %s", check2, expect2)
+	}
+
+	check3 := checksum("$ZZZ")
+	expect3 := "5A"
+	if check3 != expect3 {
+		t.Errorf("CheckSum with even ones incorrect, got: %s, should be: %s", check3, expect3)
 	}
 }
 
@@ -125,6 +146,10 @@ func TestZDACreate(t *testing.T){
 	}
 	
 }
+func TestAAM(t *testing.T){
+	verify_sentence("$GPAAM,A,A,0.10,N,WPTNME*32", t)
+}
 
-func TestNone(t *testing.T){
+func TestRMC(t *testing.T){
+	verify_sentence("$GNRMC,001031.00,A,4404.13993,N,12118.86023,W,0.146,,100117,,,A*7B", t)
 }
