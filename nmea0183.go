@@ -269,7 +269,7 @@ func convert(data string, template string, conVar string) (string, string) {
 			return data, "plan_month"
 		case "DD_year_plan":
 			return data, "plan_year"
-		case "x.x", "-x.x":
+		case "x.x", "-x.x", "Lx.xN":
 			return data, "float"
 		case "x":
 			return data, "int"
@@ -309,7 +309,10 @@ func convert(data string, template string, conVar string) (string, string) {
 			return conVar, "south"
 
 		case "R":
-			return data + conVar, "xte"
+			return data + conVar, ""
+
+		case "N":
+			return conVar + data, "xte"
 
 		case "lat":
 			d, _ := strconv.ParseInt(data[:2], 10, 32)
@@ -606,6 +609,12 @@ func convertTo183(data, template string, forward string) (string, string) {
 			return data[1:], "float"
 		case "-x.x":
 			return data, "float"
+		case "Lx.xN":
+			l := len(data)
+			if l > 3 {
+				return data[1:l-1], "LN"
+			}
+			return "", ""
 		case "x":
 			return data, "int"
 		case "tz_h":
@@ -643,6 +652,10 @@ func convertTo183(data, template string, forward string) (string, string) {
 			}
 			return "L", "LR"
 
+		case "N":
+			l := len(data)-1
+			return string(data[l]), "N"
+			
 		case "str":
 			return data, "str"
 

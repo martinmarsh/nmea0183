@@ -125,7 +125,7 @@ Sentance def:
 | ----- | ------------- | ------ | -------------------- | ------------- |
 | 1     | ap_status     | A      | 1                    | V             |
 | 2     | n/a           |        | 1                    |               |
-| 3,4,5 | xte           | x.x    | 3                    | L3.4N         |
+| 3,4   | xte           | x.x    | 3                    | L3.4N         |
 | 6     | arrived_cicle | A      | 1                    | A             |
 | 7     | passed_wpt    |        | 2                    | A             |
 | 8,9   | bear_to_waypt |        | 2                    | 123M          |

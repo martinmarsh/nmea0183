@@ -22,8 +22,7 @@ func GetDefaultVars() *map[string][]string{
         "year": {"DD_year"},
         "tz":  {"tz_h", "tz:m"},   // Datetime from ZDA if available - tz:m returns hrs:mins
         "tzhrs": {"tz_h", "tz_m"},   // Datetime from ZDA if available - tz_m returns decimal hours as a float
-        "xte": {"x.x", "R"},      // Cross Track Error turn R or L eg prefix L12.3
-        "xte_units": {"A"},       // Units for XTE - N = Nm
+        "xte": {"Lx.xN", "R", "N"},      // Cross Track Error turn R or L eg prefix L12.3N post fix  N = Nm
         "acir": {"A"},           // Arrived at way pt circle
         "aper": {"A"},           // Perpendicular passing of way pt
         "bod": {"x.x"},           // Bearing origin to destination
@@ -51,7 +50,7 @@ func GetDefaultSentences() *map[string][]string{
 
         "rmc": {"time", "status", "position", "sog", "tmg", "date", "mag_var"},
         "zda": {"time", "day", "month", "year", "tz"},
-        "apb": {"status","n/a", "xte","xte_units","acir", "aper", "bod", "bod_true", "did", "bpd", "bpd_true", "hts","hts_true"},
+        "apb": {"status","n/a", "xte","acir", "aper", "bod", "bod_true", "did", "bpd", "bpd_true", "hts","hts_true"},
         "hdg": {"n/a", "n/a", "n/a", "mag_var"},
         "hdm": {"hdm", "hdm_true"}, 
         "dpt": {"dbt", "toff"},
