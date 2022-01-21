@@ -7,6 +7,15 @@ func GetDefaultVars() *map[string][]string{
         "arrival_radius": {"x.x"},
         "radius_units":{"A"},
         "waypt_id": {"str"},
+        "ap_status": {"A"},
+        "ap_loran": {"A"},
+        "bearing_to_waypt": {"x.xT","T"},
+        "bearing_origin_to_waypt": {"x.xT","T"},
+        "bearing_position_to_waypt": {"x.xT","T"},
+        "hts": {"x.xT","T"},    // Heading to Steer T True or M magnetic
+        "ap_mode": {"A"},
+        "faa_mode": {"A"},
+        "nav_status": {"A"},
 
         "time": {"hhmmss.ss"},
         "status": {"A"},                 // status of fix A = ok ie 1 V = fail ie 0
@@ -16,12 +25,11 @@ func GetDefaultVars() *map[string][]string{
         "sog": {"x.x"},                 // Speed Over Ground  float knots
         "tmg": {"x.x"},                 // Track Made Good
         "date": {"ddmmyy"},
-        "mag_var": {"x.x", "w"},   // Mag Var E positive, W negative
+        "mag_var": {"x.x", "w"},       // Mag Var E positive, W negative
         "day": {"DD_day"},
         "month": {"DD_month"},
         "year": {"DD_year"},
-        "tz":  {"tz_h", "tz:m"},   // Datetime from ZDA if available - tz:m returns hrs:mins
-        "tzhrs": {"tz_h", "tz_m"},   // Datetime from ZDA if available - tz_m returns decimal hours as a float
+        "tz": {"tz_h", "tz:m"},   // Datetime from ZDA if available - tz:m returns minutes part of tx as hh:mm format
         "xte": {"Lx.xN", "R", "N"},      // Cross Track Error turn R or L eg prefix L12.3N post fix  N = Nm
         "acir": {"A"},           // Arrived at way pt circle
         "aper": {"A"},           // Perpendicular passing of way pt
@@ -30,8 +38,7 @@ func GetDefaultVars() *map[string][]string{
         "did": {"str"},           //Destination Waypoint ID as a str
         "bpd": {"x.x"},
         "bdp_true": {"T"},        // Bearing, present position to Destination True
-        "hts": {"x.x"},
-        "hts_true": {"T"},        // Heading to Steer True
+           // Heading to Steer True
         "hdm": {"x.x"},          // Heading Magnetic
         "hdm_true": {"T"},      // heading true or Manetic
         "dbt": {"x.x"},          // Depth below transducer
@@ -47,10 +54,11 @@ func GetDefaultVars() *map[string][]string{
 func GetDefaultSentences() *map[string][]string{
     sent := map[string][]string {
         "aam": {"arrived_circle", "passed_waypt", "arrival_radius", "radius_units", "waypt_id"},
-
-        "rmc": {"time", "status", "position", "sog", "tmg", "date", "mag_var"},
+        "apa": {"ap_status","ap_loran", "xte", "arrived_circle", "passed_waypt", "bearing_to_waypt", "waypt_id"},
+        "apb": {"ap_status", "ap_loran", "xte", "arrived_circle", "passed_waypt", "bearing_origin_to_waypt", "waypt_id", "bearing_position_to_waypt", "hts", "ap_mode"},
+        "rmc": {"time", "status", "position", "sog", "tmg", "date", "mag_var", "faa_mode","nav_status"},
+       
         "zda": {"time", "day", "month", "year", "tz"},
-        "apb": {"status","n/a", "xte","acir", "aper", "bod", "bod_true", "did", "bpd", "bpd_true", "hts","hts_true"},
         "hdg": {"n/a", "n/a", "n/a", "mag_var"},
         "hdm": {"hdm", "hdm_true"}, 
         "dpt": {"dbt", "toff"},

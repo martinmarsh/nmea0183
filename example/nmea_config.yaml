@@ -1,18 +1,29 @@
 sentences:
-  apb:
-  - status
-  - n/a
+  aam:
+  - arrived_circle
+  - passed_waypt
+  - arrival_radius
+  - radius_units
+  - waypt_id
+  apa:
+  - ap_status
+  - ap_loran
   - xte
-  - xte_units
-  - acir
-  - aper
-  - bod
-  - bod_true
-  - did
-  - bpd
-  - bpd_true
+  - arrived_circle
+  - passed_waypt
+  - bearing_to_waypt
+  - waypt_id
+  apb:
+  - ap_status
+  - ap_loran
+  - xte
+  - arrived_circle
+  - passed_waypt
+  - bearing_origin_to_waypt
+  - waypt_id
+  - bearing_position_to_waypt
   - hts
-  - hts_true
+  - ap_mode
   dpt:
   - dbt
   - toff
@@ -23,6 +34,7 @@ sentences:
   - mag_var
   hdm:
   - hdm
+  - hdm_true
   rmc:
   - time
   - status
@@ -50,9 +62,28 @@ sentences:
 variables:
   acir:
   - A
+  ap_loran:
+  - A
+  ap_mode:
+  - A
+  ap_status:
+  - A
   aper:
   - A
+  arrival_radius:
+  - x.x
+  arrived_circle:
+  - A
   bdp_true:
+  - T
+  bearing_origin_to_waypt:
+  - x.xT
+  - T
+  bearing_position_to_waypt:
+  - x.xT
+  - T
+  bearing_to_waypt:
+  - x.xT
   - T
   bod:
   - x.x
@@ -72,26 +103,31 @@ variables:
   - x.x
   hdm:
   - x.x
+  hdm_true:
+  - T
   hts:
-  - x.x
-  hts_true:
+  - x.xT
   - T
   lat:
   - lat
   - lat_NS
   long:
   - long
-  - Long_WE
+  - long_WE
   mag_var:
   - x.x
   - w
   month:
   - DD_month
+  passed_waypt:
+  - A
   position:
   - lat
   - lat_NS
   - pos_long
   - pos_WE
+  radius_units:
+  - A
   sog:
   - x.x
   status:
@@ -103,17 +139,15 @@ variables:
   tmg:
   - x.x
   toff:
-  - x.x
+  - -x.x
   tz:
   - tz_h
   - tz:m
-  tzhrs:
-  - tz_h
-  - tz_m
+  waypt_id:
+  - str
   xte:
-  - x.x
+  - Lx.xN
   - R
-  xte_units:
-  - A
+  - "N"
   year:
   - DD_year

@@ -113,7 +113,7 @@ func TestZDACreate(t *testing.T){
 		 "day": {"x"},
 		 "month": {"x"},
 		 "year": {"x"},
-		 "tz": {"tz_h", "tz_m"},
+		 "tz": {"tz_h", "tz:m"},
 		 "dpt": {},
 		 "toff": {},	   
 		}
@@ -125,7 +125,7 @@ func TestZDACreate(t *testing.T){
 	if nm.Data["day"] != "15" || nm.Data["month"] != "09" ||nm.Data["year"] != "2020" {
 		t.Errorf("Icorrect data got %s %s %s", nm.Data["day"], nm.Data["month"], nm.Data["year"])
 	}
-	if nm.Data["tz"] != "1.50" {
+	if nm.Data["tz"] != "01:30" {
 		t.Errorf("Error TZ time incorrectly parsed got %s", nm.Data["tz"])
 	}
 	
@@ -150,6 +150,31 @@ func TestAAM(t *testing.T){
 	verify_sentence("$GPAAM,A,A,0.10,N,WPTNME*32", t)
 }
 
+func TestAPA(t *testing.T){
+	verify_sentence("$GPAPA,A,A,8.30,L,M,V,V,11.7,T,Turning Track to Ijmuiden 1*1B", t)
+	verify_sentence("$GPAPA,A,A,8.99,L,M,V,V,11.7,T,Turning Track to Ijmuiden 1*18", t)
+	verify_sentence("$GPAPA,A,A,9.78,L,M,V,V,11.7,T,Turning Track to Ijmuiden 1*16", t)
+	verify_sentence("$GPAPA,A,A,10.35,L,M,V,V,11.7,T,Turning Track to Ijmuiden 1*27", t)
+}
+
+func TestAPB(t *testing.T){
+	verify_sentence("$GPAPB,A,A,0.02617,R,N,V,V,210.0,T,Vlissingen,236.6,T,236.6,T,D*5D", t)
+	verify_sentence("$GPAPB,A,A,0.02620,R,N,V,V,210.0,T,Vlissingen,236.7,T,236.7,T,D*59", t)
+	verify_sentence("$GPAPB,A,A,0.02003,R,N,V,V,210.0,T,Vlissingen,227.6,T,227.6,T,D*5E", t)
+	verify_sentence("$GPAPB,A,A,0.00536,R,N,V,V,210.0,T,Vlissingen,213.4,T,213.4,T,D*5F", t)
+	verify_sentence("$GPAPB,A,A,5,L,N,V,V,359.,T,1,359.1,T,6,T,A*7C", t)
+}
+
+
 func TestRMC(t *testing.T){
-	verify_sentence("$GNRMC,001031.00,A,4404.13993,N,12118.86023,W,0.146,,100117,,,A*7B", t)
+	
+	verify_sentence("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75", t)
+	
+	verify_sentence("$GPRMC,163354.17,A,5222.5109,N,00502.8805,E,4.5,271.1,130319,,,D,V*24", t)
+	verify_sentence("$GPRMC,163355.67,A,5222.5110,N,00502.8773,E,4.5,272.3,130319,,,D,V*25", t)
+	verify_sentence("$GPRMC,163400.19,A,5222.5111,N,00502.8679,E,4.4,272.6,130319,,,D,V*25", t)
+	verify_sentence("$GPRMC,163400.19,A,5222.5111,N,00502.8679,E,4.4,272.6,130319,,,D,V*25", t)
+	verify_sentence("$GPRMC,163401.70,A,5222.5111,N,00502.8649,E,4.4,272.1,130319,,,D,A*38", t)
+	verify_sentence("$GNRMC,001031.00,A,4404.1399,N,12118.8602,W,0.146,,100117,,,A,*57", t)
+
 }

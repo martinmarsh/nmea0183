@@ -177,7 +177,7 @@ func (c *Config) ParseToMap(nmea string)  (map[string]string, string, string, er
 			varName, templateList := findInMap(varList[varPointer], c.Variables)
 			conVar := ""
 			typeStr = ""
-			if len(varName) > 0 {
+			if len(varName) > 0 && fieldPointer < len(parts){
 				for _, template := range templateList {
 					conVar, typeStr = convert(parts[fieldPointer], template, conVar)
 					fieldPointer++
@@ -237,7 +237,7 @@ func timeConv(data string) string{
 	m, e1 := strconv.ParseInt(data[2:4], 10, 16)
 	s, e2 := strconv.ParseFloat(data[4:], 32)
 	if e == nil && e1 == nil && e2 == nil {
-		return fmt.Sprintf("%02d:%02d:%02.2f", h, m, s)
+		return fmt.Sprintf("%02d:%02d:%05.2f", h, m, s)
 	}
 	return ""
 }
@@ -269,19 +269,13 @@ func convert(data string, template string, conVar string) (string, string) {
 			return data, "plan_month"
 		case "DD_year_plan":
 			return data, "plan_year"
-		case "x.x", "-x.x", "Lx.xN":
+		case "x.x", "-x.x", "Lx.xN", "x.xT":
 			return data, "float"
 		case "x":
 			return data, "int"
 		case "tz_h":
 			return data, "tzh"
-		case "tz_m":
-			h, e := strconv.ParseFloat(conVar, 32)
-			m, e1 := strconv.ParseFloat(data, 32)
-			if e == nil && e1 == nil {
-				h += m / 60
-				return fmt.Sprintf("%02.2f", h), "tzfloat"
-			}
+		
 		case "tz:m":
 			return conVar + ":" + data, "zone"
 		case "plan_tz:m":
@@ -294,7 +288,7 @@ func convert(data string, template string, conVar string) (string, string) {
 			return data, "str"
 
 		case "T":
-			return data, "T"
+			return conVar + "°"+ data, "T"
 
 		case "w":
 			if data == "W" || data == "w" {
@@ -317,17 +311,17 @@ func convert(data string, template string, conVar string) (string, string) {
 		case "lat":
 			d, _ := strconv.ParseInt(data[:2], 10, 32)
 			m, _ := strconv.ParseFloat(data[2:], 32)
-			return fmt.Sprintf("%02d° %02.4f'", d, m), ""
+			return fmt.Sprintf("%02d° %07.4f'", d, m), ""
 
 		case "long":
 			d, _ := strconv.ParseInt(data[:3], 10, 32)
 			m, _ := strconv.ParseFloat(data[3:], 32)
-			return fmt.Sprintf("%03d° %02.4f'", d, m), ""
+			return fmt.Sprintf("%03d° %07.4f'", d, m), ""
 		
 		case "pos_long":
 			d, _ := strconv.ParseInt(data[:3], 10, 32)
 			m, _ := strconv.ParseFloat(data[3:], 32)
-			return conVar + ", " + fmt.Sprintf("%03d° %02.4f'", d, m), ""
+			return conVar + ", " + fmt.Sprintf("%03d° %07.4f'", d, m), ""
 
 		case "long_WE":
 			return conVar + data, "long"
@@ -523,7 +517,7 @@ func LatLongToString(latFloat, longFloat float64) (string, string, error) {
 		symbol = "S"
 	}
 
-	lat := fmt.Sprintf("%02d° %02.4f'%s", latInt, latMins, symbol)
+	lat := fmt.Sprintf("%02d° %07.4f'%s", latInt, latMins, symbol)
 
 	longAbs := math.Abs(longFloat)
 	longInt := int(longAbs)
@@ -533,7 +527,7 @@ func LatLongToString(latFloat, longFloat float64) (string, string, error) {
 		symbol = "W"
 	}
 
-	long := fmt.Sprintf("%03d° %02.4f'%s", longInt, longMins, symbol)
+	long := fmt.Sprintf("%03d° %07.4f'%s", longInt, longMins, symbol)
 
 	return lat, long, nil
 }
@@ -547,10 +541,11 @@ func (c *Config) WriteSentence(manCode string, sentenceName string) (string, err
 	if len(key) > 1 {
 		for _, v := range varList {
 			_, vFormats := findInMap(v, c.Variables)
-			if value, ok := c.Data[v]; ok {
-				if len(v) == 0 || v == "n/a"{
+			value, ok := c.Data[v]
+			if ok && len(value)>0 {
+				if len(v) == 0 || v == "n/a" {
 					madeSentence += ","
-				}else if len(value) >0 {
+				}else{
 					m, err := getSentencePart(value, vFormats)
 					if err != nil{
 						return "", fmt.Errorf("field error definition %w", err)
@@ -611,21 +606,21 @@ func convertTo183(data, template string, forward string) (string, string) {
 			return data, "float"
 		case "Lx.xN":
 			l := len(data)
-			if l > 3 {
+			if l > 2 {
 				return data[1:l-1], "LN"
 			}
 			return "", ""
+		case "x.xT":
+			l := len(data)
+			if l > 2 {
+				return data[:l-3], "xT"
+			}
+			return "", ""
+
 		case "x":
 			return data, "int"
 		case "tz_h":
 			return data[:2], "tzh"
-
-		case "tz_m":
-			m, e := strconv.ParseFloat(data[3:], 32)
-			if e == nil {
-				m *= 60
-				return fmt.Sprintf("%02.2f", m), "tzfloat"
-			}
 
 		case "tz:m":
 			return data[3:], "zone"
@@ -660,7 +655,8 @@ func convertTo183(data, template string, forward string) (string, string) {
 			return data, "str"
 
 		case "T":
-			return data, "T"
+			l := len(data)-1
+			return string(data[l]), "N"
 
 		case "lat":
 			split :=  strings.SplitN(data[4:], ",", 2)
