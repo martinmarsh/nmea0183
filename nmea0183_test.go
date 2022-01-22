@@ -6,6 +6,7 @@ import (
 	"math"
 )
 
+
 func verify_sentence(sentence string, t *testing.T){
 	nm:= Create()
 	preFix, postFix, err := nm.Parse(sentence)
@@ -90,14 +91,14 @@ func TestConvetFloatLatLong(t *testing.T) {
 func TestZDA(t *testing.T){
 	nm, _ := Load("./example")
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
-	if nm.Data["time"] != "11:09:10.59" {
-		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
+	if nm.data["time"] != "11:09:10.59" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])
 	}
-	if nm.Data["day"] != "15" || nm.Data["month"] != "09" ||nm.Data["year"] != "2020" {
-		t.Errorf("Icorrect data got %s %s %s", nm.Data["day"], nm.Data["month"], nm.Data["year"])
+	if nm.data["day"] != "15" || nm.data["month"] != "09" ||nm.data["year"] != "2020" {
+		t.Errorf("Icorrect data got %s %s %s", nm.data["day"], nm.data["month"], nm.data["year"])
 	}
-	if nm.Data["tz"] != "00:00" {
-		t.Errorf("Error TZ time incorrectly parsed got %s", nm.Data["tz"])
+	if nm.data["tz"] != "00:00" {
+		t.Errorf("Error TZ time incorrectly parsed got %s", nm.data["tz"])
 	}
 
 }
@@ -119,30 +120,30 @@ func TestZDACreate(t *testing.T){
 		}
 	nm := Create(sentences, variables)
 	nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6D")
-	if nm.Data["time"] != "11:09:10.59" {
-		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
+	if nm.data["time"] != "11:09:10.59" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])
 	}
-	if nm.Data["day"] != "15" || nm.Data["month"] != "09" ||nm.Data["year"] != "2020" {
-		t.Errorf("Icorrect data got %s %s %s", nm.Data["day"], nm.Data["month"], nm.Data["year"])
+	if nm.data["day"] != "15" || nm.data["month"] != "09" ||nm.data["year"] != "2020" {
+		t.Errorf("Icorrect data got %s %s %s", nm.data["day"], nm.data["month"], nm.data["year"])
 	}
-	if nm.Data["tz"] != "01:30" {
-		t.Errorf("Error TZ time incorrectly parsed got %s", nm.Data["tz"])
+	if nm.data["tz"] != "01:30" {
+		t.Errorf("Error TZ time incorrectly parsed got %s", nm.data["tz"])
 	}
 	
 	// Test loading another create is independant
 	nm2 := Create(sentences, variables)
-	if len(nm2.Data) != 0 || len(nm2.History) !=0 || len(nm.Data) == 0 || len(nm.History) == 0 {
+	if len(nm2.data) != 0 || len(nm2.history) !=0 || len(nm.data) == 0 || len(nm.history) == 0 {
 		t.Errorf("Second Create call failed - check that they are independan ")
 	}
 	nm3 := Create(sentences)
 	nm3.Parse("$GPZDA,120910.59,15,09,2020,01,30*6E")
-	if nm3.Data["time"] != "12:09:10.59" {
-		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
+	if nm3.data["time"] != "12:09:10.59" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])
 	}
 	nm4 := Create()
 	nm4.Parse("$GPZDA,130910.59,15,09,2020,01,30*6F")
-	if nm4.Data["time"] != "13:09:10.59" {
-		t.Errorf("Error time incorrectly parsed got %s", nm.Data["time"])
+	if nm4.data["time"] != "13:09:10.59" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])
 	}
 	
 }

@@ -24,13 +24,13 @@ func main() {
 	// use returned handle to Parse NMEA statements
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 	// values parsed are merged into a Data map
-	fmt.Println(nm.Data)
+	fmt.Println(nm.GetMap())
 
 	nm.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75")
-	fmt.Println(nm.Data)
+	fmt.Println(nm.GetMap())
 
 	//Format of lat and long are readable strings
-	fmt.Println(nm.Data["position"])
+	fmt.Println(nm.Get("position"))
 
 	//Can convert position variable to floats
 	latFloat, longFloat, _ := nm.LatLongToFloat("position")
@@ -38,7 +38,7 @@ func main() {
 
 	//Can write a variable from float lat and long
 	nm.LatLongToString(latFloat, longFloat, "new_position")
-	fmt.Println(nm.Data["new_position"])
+	fmt.Println(nm.Get("new_position"))
 
 	//examples of other sentances passed
 	nm.Parse("$HCHDM,172.5,M*28")
@@ -46,6 +46,6 @@ func main() {
 	nm.Parse("$SSDPT,2.8,-0.7")
 
 	//Data is built and updated as sentances parsed
-	fmt.Println(nm.Data)
+	fmt.Println(nm.GetMap())
 
 }

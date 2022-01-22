@@ -30,7 +30,7 @@ Features marked with * are under development and refinement, templates are being
 - Built in basic sentences can be used if preferred
 - Check sum verification automatic if present
 - Sentence definitions and config can be preloaded and multiple se47ntences passed
-- Results returned in readable string format eg bearing = 100°T  position = "50° .3986'N, 000° 54.6007'W"
+- Results returned in readable string format eg bearing = 100°T  position = "50° 00.3986'N, 000° 54.6007'W"
 - Sentence values are collected in a GO map with user named keys
 - Sentence fields can be ignored if not required
 - Variables can be mapped to different sources for example when using two GPS systems
@@ -374,7 +374,7 @@ Examples:
 
 Actisense NGW-1 maps: 2000 -> 183, 0183 -> 2000
 
-This is one of the sentences commonly emitted by GPS units.
+This is one of the sentences commonly emitted by GPS units. The default config writes NMEA 4.1 standard but will read in the older versions
 
               1         2 3       4 5        6  7   8   9    10 11
               |         | |       | |        |  |   |   |    |  |

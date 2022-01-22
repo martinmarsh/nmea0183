@@ -2,29 +2,30 @@ package nmea0183
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"math"
-	"time"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/spf13/viper"
 )
 
 type Config struct {
 	Sentences, Variables map[string][]string
-	Data                 map[string]string
-	History				 map[string]int64
-	MessageDate			 time.Time
-	UpDated				 time.Time
+	data                 map[string]string
+	history				 map[string]int64
+	messageDate			 time.Time
+	upDated				 time.Time
 	realTime			 bool
 	autoClearPeriod		 int64               // in milliseconds
 }
 
 func setUp() *Config{
 	var c Config
-	c.Data = make(map[string]string)
-	c.History = make(map[string] int64) 
-	c.MessageDate = time.Date(0,1,1,0,0,0,0,time.UTC)
-	c.UpDated = time.Now().UTC()
+	c.data = make(map[string]string)
+	c.history = make(map[string] int64) 
+	c.messageDate = time.Date(0,1,1,0,0,0,0,time.UTC)
+	c.upDated = time.Now().UTC()
 	c.realTime = true       // false for historic message processing (or No real time clock) and sentances include a date
 	c.autoClearPeriod = 0  // Disabled
 	return &c
@@ -69,7 +70,7 @@ func Load(setting ...string) (*Config, error) {
 
 	c.Sentences = viper.GetStringMapStringSlice("sentences")
 	c.Variables = viper.GetStringMapStringSlice("variables")
-	c.Data = make(map[string]string)
+	c.data = make(map[string]string)
 	return c, err
 }
 
@@ -89,6 +90,34 @@ func SaveConfig(setting ...string){
 	}
 }
 
+func (c *Config) GetMap() map[string]string{
+	return c.data
+}
+
+func (c *Config) Get(key string) string {
+	if val, ok := c.data[key]; ok {
+		return val
+	 } else {
+		 return ""
+	 }
+}
+
+func (c *Config) DateMap() map[string]time.Time{
+	dateMap := make(map[string] time.Time)
+	for k, v := range(c.history){
+		dateMap[k] = time.UnixMilli(v)
+	}
+	return dateMap
+}
+
+func (c *Config) Date(key string) time.Time {
+	if val, ok := c.history[key]; ok {
+		return time.UnixMilli(val)
+	 } else {
+		 return time.UnixMilli(0)
+	 }
+}
+
 func (c *Config) DeleteBefore(timeMS int64){
 	/*
 	Deletes variables in data which have a millisecond time stamp less than timeMS
@@ -98,13 +127,13 @@ func (c *Config) DeleteBefore(timeMS int64){
 	if c.realTime {
 		timeNow = time.Now().UTC().UnixMilli()
 	}else{
-		timeNow = c.MessageDate.UnixMilli()
+		timeNow = c.messageDate.UnixMilli()
 	}
 	timeBefore := timeNow-timeMS
 
-	for i, v := range c.History{
+	for i, v := range c.history{
 		if v < timeBefore{
-				delete(c.Data, i)
+				delete(c.data, i)
 		}
 	}
 }
@@ -115,17 +144,17 @@ func (c *Config) Merge(results map[string]string) {
 	if c.autoClearPeriod > 0 { 
 		c.DeleteBefore(c.autoClearPeriod)
 	}
-	c.UpDated = time.Now().UTC()
+	c.upDated = time.Now().UTC()
 	
 	if c.realTime {
-		timeStamp = c.UpDated.UnixMilli()
+		timeStamp = c.upDated.UnixMilli()
 	}else{
-		timeStamp = c.MessageDate.UnixMilli()
+		timeStamp = c.messageDate.UnixMilli()
 	}
 
 	for n, v := range results {
-		c.Data[n] = v
-		c.History[n] = timeStamp
+		c.data[n] = v
+		c.history[n] = timeStamp
 	}
 }
 
@@ -221,7 +250,7 @@ func (c *Config) ParseToMap(nmea string)  (map[string]string, string, string, er
 					rcDate := dateTime + "+" + zone	
 					messageDate, err := time.Parse(time.RFC3339, rcDate)
 					if err == nil{
-						c.MessageDate = messageDate
+						c.messageDate = messageDate
 						results["datetime"] = rcDate
 
 					}
@@ -391,7 +420,7 @@ func findInMap(k string, m map[string][]string) (string, []string) {
 func (c *Config) LatLongToFloat(params ...string) (float64, float64, error) {
 	/*
 	As a method on the handler structure the string parameters refer to variable names in
-	c.Data
+	c.data
 
 	Give one parameter for a variable name that holds a position string ie in form lat, Long or
 	give the names of 2 variables  which hold lat and long respectively.
@@ -400,12 +429,12 @@ func (c *Config) LatLongToFloat(params ...string) (float64, float64, error) {
 	*/
 
 	if len(params) == 2 {
-		lat:= c.Data[params[0]]
-		long := c.Data[params[1]]
+		lat:= c.data[params[0]]
+		long := c.data[params[1]]
 		return LatLongToFloat(lat, long)
 	}
 	if len(params) == 1{
-		return LatLongToFloat(c.Data[params[0]])
+		return LatLongToFloat(c.data[params[0]])
 	}
 
 	return 0, 0, fmt.Errorf("illegal number of parmeters given to latlongtofloat")
@@ -467,7 +496,7 @@ func LatLongToFloat(params ...string) (float64, float64, error) {
 func (c *Config) LatLongToString(latFloat, longFloat float64, params ...string) error {
 	/*
 	As a method on the data structure the string parameters refer to variable names in
-	c.Data wich will be set by converting the lat and long float parameters
+	c.data wich will be set by converting the lat and long float parameters
 
 	One variable name assumes a position string containing lat, long will be set
 	two variable names assumes that 2 variables one for lat and on for long will bes set
@@ -483,19 +512,19 @@ func (c *Config) LatLongToString(latFloat, longFloat float64, params ...string) 
     var timeNow int64
 
 	if c.realTime {
-		timeNow = time.Now().UTC().UnixMicro()
+		timeNow = time.Now().UTC().UnixMilli()
 	} else {
-		timeNow = c.MessageDate.UnixMilli()
+		timeNow = c.messageDate.UnixMilli()
 	}
 
 	if len(params) == 1 {
-		c.Data[params[0]] = latStr + ", " + longStr
-		c.History[params[0]] = timeNow
+		c.data[params[0]] = latStr + ", " + longStr
+		c.history[params[0]] = timeNow
 	} else {
-		c.Data[params[0]] = latStr
-		c.Data[params[1]] = longStr
-		c.History[params[0]] = timeNow
-		c.History[params[1]] = timeNow
+		c.data[params[0]] = latStr
+		c.data[params[1]] = longStr
+		c.history[params[0]] = timeNow
+		c.history[params[1]] = timeNow
 	}
 	
 	return nil
@@ -541,7 +570,7 @@ func (c *Config) WriteSentence(manCode string, sentenceName string) (string, err
 	if len(key) > 1 {
 		for _, v := range varList {
 			_, vFormats := findInMap(v, c.Variables)
-			value, ok := c.Data[v]
+			value, ok := c.data[v]
 			if ok && len(value)>0 {
 				if len(v) == 0 || v == "n/a" {
 					madeSentence += ","
@@ -557,8 +586,6 @@ func (c *Config) WriteSentence(manCode string, sentenceName string) (string, err
 					madeSentence += ","
 				}
 			}
-            
-
 		}
 		madeSentence = "$" + madeSentence
 		checksum := checksum(madeSentence)
@@ -686,8 +713,7 @@ func convertTo183(data, template string, forward string) (string, string) {
 			l := len(split[0])-1
 			return string(split[0][l]), ""
 			
-		case "ddmmyy", "plan_ddmmyy":
-			
+		case "ddmmyy", "plan_ddmmyy":	
 			return data[8:] + data[5:7] + data[2:4], ""
 	}
 	return "", ""
