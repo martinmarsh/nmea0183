@@ -1,4 +1,4 @@
-sentences:
+formats:
   aam:
   - arrived_circle
   - passed_waypt
@@ -43,6 +43,8 @@ sentences:
   - tmg
   - date
   - mag_var
+  - faa_mode
+  - nav_status
   vhm:
   - n/a
   - n/a
@@ -101,6 +103,8 @@ variables:
   - str
   dw:
   - x.x
+  faa_mode:
+  - A
   hdm:
   - x.x
   hdm_true:
@@ -119,6 +123,8 @@ variables:
   - w
   month:
   - DD_month
+  nav_status:
+  - A
   passed_waypt:
   - A
   position:

@@ -1,6 +1,13 @@
 package nmea0183
 
-func GetDefaultVars() *map[string][]string{
+func DefaultSentances() *sentences {
+    var defaults sentences
+    defaults.formats = GetDefaultFormats()
+    defaults.variables = GetDefaultVars()
+    return &defaults
+}
+
+func GetDefaultVars() map[string][]string{
     vars := map[string][]string {
         "arrived_circle": {"A"},
         "passed_waypt": {"A"},
@@ -16,8 +23,9 @@ func GetDefaultVars() *map[string][]string{
         "ap_mode": {"A"},
         "faa_mode": {"A"},
         "nav_status": {"A"},
-
         "time": {"hhmmss.ss"},
+
+
         "status": {"A"},                 // status of fix A = ok ie 1 V = fail ie 0
         "lat": {"lat", "lat_NS"},      // formated latitude
         "long": {"long","long_WE"},    // formated longitude
@@ -48,17 +56,17 @@ func GetDefaultVars() *map[string][]string{
        
     }
 
-    return &vars
+    return vars
 }
 
-func GetDefaultSentences() *map[string][]string{
-    sent := map[string][]string {
+func GetDefaultFormats() map[string][]string{
+    formats := map[string][]string {
         "aam": {"arrived_circle", "passed_waypt", "arrival_radius", "radius_units", "waypt_id"},
         "apa": {"ap_status","ap_loran", "xte", "arrived_circle", "passed_waypt", "bearing_to_waypt", "waypt_id"},
         "apb": {"ap_status", "ap_loran", "xte", "arrived_circle", "passed_waypt", "bearing_origin_to_waypt", "waypt_id", "bearing_position_to_waypt", "hts", "ap_mode"},
         "rmc": {"time", "status", "position", "sog", "tmg", "date", "mag_var", "faa_mode","nav_status"},
-       
         "zda": {"time", "day", "month", "year", "tz"},
+
         "hdg": {"n/a", "n/a", "n/a", "mag_var"},
         "hdm": {"hdm", "hdm_true"}, 
         "dpt": {"dbt", "toff"},
@@ -66,5 +74,5 @@ func GetDefaultSentences() *map[string][]string{
         "vlw": {"n/a", "n/a", "wd"},
     }
 
-    return &sent
+    return formats
 }

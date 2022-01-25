@@ -427,3 +427,42 @@ The number of digits past the decimal point for Time, Latitude and Longitude is 
 Example: $GNRMC,001031.00,A,4404.13993,N,12118.86023,W,0.146,,100117,,,A*7B
 
 ---
+
+## ZDA - Time & Date - UTC, day, month, year and local time zone
+
+Actisense NGW-1 maps: 2000 -> 183, 0183 -> 2000
+
+    This is one of the sentences commonly emitted by GPS units.
+
+                    1         2  3  4    5  6  7
+                    |         |  |  |    |  |  |
+            $--ZDA,hhmmss.ss,xx,xx,xxxx,xx,xx*hh<CR><LF>
+
+ Sentence def:
+       "zda": {"time", "day", "month", "year", "tz"}
+
+
+| Field | Name  | Format     | No of Fields matched | Example Value |
+| ----- | ----- | ---------- | -------------------- | ------------- |
+| 1     | time  | hhmmss.ss  | 1                    | 16:15:40.12   |
+| 2     | day   | x          | DD_day               | 25            |
+| 3     | month | x          | DD_month             | 12            |
+| 7     | year  | x          | DD_year              | 2021          |
+| 8     | tz    | tz_h, tz:m | 2                    | 12:23         |
+
+
+**time** UTC time (hours, minutes, seconds, may have fractional subseconds)
+
+**day** Day, 01 to 31
+
+**month** Month, 01 to 12
+
+**year** Year (4 digits)
+
+**tz** Local zone description, 00 to +- 13 hours  Local zone minutes description, 00 to 59, apply same sign as local hours
+
+Checksum
+
+Example: $GPZDA,160012.71,11,03,2004,-1,00*7D
+
+---

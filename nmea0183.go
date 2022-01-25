@@ -10,45 +10,50 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Config struct {
-	Sentences, Variables map[string][]string
-	data                 map[string]string
-	history				 map[string]int64
-	messageDate			 time.Time
-	upDated				 time.Time
+type settings struct {
 	realTime			 bool
 	autoClearPeriod		 int64               // in milliseconds
 }
 
-func setUp() *Config{
-	var c Config
-	c.data = make(map[string]string)
-	c.history = make(map[string] int64) 
-	c.messageDate = time.Date(0,1,1,0,0,0,0,time.UTC)
-	c.upDated = time.Now().UTC()
-	c.realTime = true       // false for historic message processing (or No real time clock) and sentances include a date
-	c.autoClearPeriod = 0  // Disabled
-	return &c
+
+type sentences struct {
+	formats, variables map[string][]string
 }
 
-func Create(params ...map[string][]string) *Config {
-	c := setUp()
-	if len(params) == 1 {
-		c.Sentences = params[0]
-		c.Variables = *GetDefaultVars()
-	}
-	if len(params) == 2 {
-		c.Sentences = params[0]
-		c.Variables = params[1]
-	}else{
-		c.Sentences = *GetDefaultSentences()
-		c.Variables = *GetDefaultVars()
-	}
-	return c
+type Handle struct {
+	data                 map[string]string
+	history				 map[string]int64
+	messageDate			 time.Time
+	upDated				 time.Time
+	settings			 settings
+	sentences			 *sentences
 }
 
-func Load(setting ...string) (*Config, error) {
-	c := setUp()
+func setUp() *Handle{
+	var h Handle
+	var set	settings
+	
+	set.realTime = true       // false for historic message processing (or No real time clock) and sentances include a date
+	set.autoClearPeriod = 0  // Disabled
+
+	h.data = make(map[string]string)
+	h.history = make(map[string] int64) 
+	h.messageDate = time.Date(0,1,1,0,0,0,0,time.UTC)
+	h.upDated = time.Now().UTC()
+	h.settings = set
+
+	return &h
+}
+
+func Create(sentences *sentences) *Handle {
+	h := setUp()
+	h.sentences = sentences
+	return h
+}
+
+func Load(setting ...string) (*Handle, error) {
+	h := setUp()
+	var sent sentences
 	configSet := []string{".", "nmea_config", "yaml"}
 	copy(configSet, setting)
 
@@ -59,19 +64,22 @@ func Load(setting ...string) (*Config, error) {
 	err := viper.ReadInConfig() // Find and read the config file
 	if err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			err = fmt.Errorf("config file was not found. Use Create or download nmea_config.yaml: %w", err)
-			return c, err
+			err = fmt.Errorf("sentence file was not found. Use Create or download nmea_config.yaml: %w", err)
+			return h, err
 		} else {
-			// Config file was found but another error was produced
+			// Handle file was found but another error was produced
 			err = fmt.Errorf("fatal error in config file: %w", err)
-			return c, err
+			return h, err
 		}
 	}
 
-	c.Sentences = viper.GetStringMapStringSlice("sentences")
-	c.Variables = viper.GetStringMapStringSlice("variables")
-	c.data = make(map[string]string)
-	return c, err
+	sent.formats = viper.GetStringMapStringSlice("formats")
+	sent.variables = viper.GetStringMapStringSlice("variables")
+
+	h.sentences = &sent
+	
+	h.data = make(map[string]string)
+	return h, err
 }
 
 func SaveConfig(setting ...string){
@@ -82,7 +90,7 @@ func SaveConfig(setting ...string){
 	viper.SetConfigType(configSet[2]) // REQUIRED if the config file does not have the extension in the name
 	viper.AddConfigPath(configSet[0]) // optionally look for config in the working directory
 
-	viper.SetDefault("sentences", GetDefaultSentences())
+	viper.SetDefault("formats", GetDefaultFormats())
 	viper.SetDefault("variables", GetDefaultVars())
 	err := viper.ReadInConfig() // Find and read the config file
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -90,95 +98,95 @@ func SaveConfig(setting ...string){
 	}
 }
 
-func (c *Config) GetMap() map[string]string{
-	return c.data
+func (h *Handle) GetMap() map[string]string{
+	return h.data
 }
 
-func (c *Config) Get(key string) string {
-	if val, ok := c.data[key]; ok {
+func (h *Handle) Get(key string) string {
+	if val, ok := h.data[key]; ok {
 		return val
 	 } else {
 		 return ""
 	 }
 }
 
-func (c *Config) DateMap() map[string]time.Time{
+func (h *Handle) DateMap() map[string]time.Time{
 	dateMap := make(map[string] time.Time)
-	for k, v := range(c.history){
+	for k, v := range(h.history){
 		dateMap[k] = time.UnixMilli(v)
 	}
 	return dateMap
 }
 
-func (c *Config) Date(key string) time.Time {
-	if val, ok := c.history[key]; ok {
+func (h *Handle) Date(key string) time.Time {
+	if val, ok := h.history[key]; ok {
 		return time.UnixMilli(val)
 	 } else {
 		 return time.UnixMilli(0)
 	 }
 }
 
-func (c *Config) DeleteBefore(timeMS int64){
+func (h *Handle) DeleteBefore(timeMS int64){
 	/*
 	Deletes variables in data which have a millisecond time stamp less than timeMS
 	*/
 	var timeNow int64
 
-	if c.realTime {
+	if h.settings.realTime {
 		timeNow = time.Now().UTC().UnixMilli()
 	}else{
-		timeNow = c.messageDate.UnixMilli()
+		timeNow = h.messageDate.UnixMilli()
 	}
 	timeBefore := timeNow-timeMS
 
-	for i, v := range c.history{
+	for i, v := range h.history{
 		if v < timeBefore{
-				delete(c.data, i)
+				delete(h.data, i)
 		}
 	}
 }
 
-func (c *Config) Merge(results map[string]string) {
+func (h *Handle) Merge(results map[string]string) {
 	var timeStamp int64
 
-	if c.autoClearPeriod > 0 { 
-		c.DeleteBefore(c.autoClearPeriod)
+	if h.settings.autoClearPeriod > 0 { 
+		h.DeleteBefore(h.settings.autoClearPeriod)
 	}
-	c.upDated = time.Now().UTC()
+	h.upDated = time.Now().UTC()
 	
-	if c.realTime {
-		timeStamp = c.upDated.UnixMilli()
+	if h.settings.realTime {
+		timeStamp = h.upDated.UnixMilli()
 	}else{
-		timeStamp = c.messageDate.UnixMilli()
+		timeStamp = h.messageDate.UnixMilli()
 	}
 
 	for n, v := range results {
-		c.data[n] = v
-		c.history[n] = timeStamp
+		h.data[n] = v
+		h.history[n] = timeStamp
 	}
 }
 
-func (c *Config) Preferences(clear int64, realTime bool) {
+func (h *Handle) Preferences(clear int64, realTime bool) {
 	if clear < 1 {
-		c.autoClearPeriod = 0
+		h.settings.autoClearPeriod = 0
 	}else{
-		c.autoClearPeriod = clear * 1000
+		h.settings.autoClearPeriod = clear * 1000
 	}
-	c.realTime = realTime
+	h.settings.realTime = realTime
 }
 
 var dateTypeTemplates = []string {"day", "month", "year", "date", "time", "zone"}
 
-func (c *Config) Parse(nmea string) (string, string, error){
-	data, preFix, postFix, error := c.ParseToMap(nmea)
+func (h *Handle) Parse(nmea string) (string, string, error){
+	data, preFix, postFix, error := h.ParseToMap(nmea)
 	if error == nil{
-		c.Merge(data)
+		h.Merge(data)
 	}
 	return preFix, postFix, error
 }
 
 
-func (c *Config) ParseToMap(nmea string)  (map[string]string, string, string, error){
+func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, error){
 	end_byte := len(nmea)
 	var err error
 	if nmea[end_byte-3] == '*' {
@@ -194,7 +202,7 @@ func (c *Config) ParseToMap(nmea string)  (map[string]string, string, string, er
 	parts := strings.Split(nmea[1:end_byte], ",")
 	preFix := parts[0][:2]
 	sentenceType := strings.ToLower(parts[0][2:])
-	key, varList := findInMap(sentenceType, c.Sentences)
+	key, varList := findInMap(sentenceType, h.sentences.formats)
 	results := make(map[string]string)
 	date := ""
 	dateTypes := make(map[string]string)
@@ -203,7 +211,7 @@ func (c *Config) ParseToMap(nmea string)  (map[string]string, string, string, er
 		fieldPointer := 1
 		var typeStr string
 		for varPointer := 0; varPointer < len(varList); varPointer++ {
-			varName, templateList := findInMap(varList[varPointer], c.Variables)
+			varName, templateList := findInMap(varList[varPointer], h.sentences.variables)
 			conVar := ""
 			typeStr = ""
 			if len(varName) > 0 && fieldPointer < len(parts){
@@ -250,7 +258,7 @@ func (c *Config) ParseToMap(nmea string)  (map[string]string, string, string, er
 					rcDate := dateTime + "+" + zone	
 					messageDate, err := time.Parse(time.RFC3339, rcDate)
 					if err == nil{
-						c.messageDate = messageDate
+						h.messageDate = messageDate
 						results["datetime"] = rcDate
 
 					}
@@ -417,7 +425,7 @@ func findInMap(k string, m map[string][]string) (string, []string) {
 	return "", []string{""}
 }
 
-func (c *Config) LatLongToFloat(params ...string) (float64, float64, error) {
+func (h *Handle) LatLongToFloat(params ...string) (float64, float64, error) {
 	/*
 	As a method on the handler structure the string parameters refer to variable names in
 	c.data
@@ -429,12 +437,12 @@ func (c *Config) LatLongToFloat(params ...string) (float64, float64, error) {
 	*/
 
 	if len(params) == 2 {
-		lat:= c.data[params[0]]
-		long := c.data[params[1]]
+		lat:= h.data[params[0]]
+		long := h.data[params[1]]
 		return LatLongToFloat(lat, long)
 	}
 	if len(params) == 1{
-		return LatLongToFloat(c.data[params[0]])
+		return LatLongToFloat(h.data[params[0]])
 	}
 
 	return 0, 0, fmt.Errorf("illegal number of parmeters given to latlongtofloat")
@@ -493,7 +501,7 @@ func LatLongToFloat(params ...string) (float64, float64, error) {
 }
 
 
-func (c *Config) LatLongToString(latFloat, longFloat float64, params ...string) error {
+func (h *Handle) LatLongToString(latFloat, longFloat float64, params ...string) error {
 	/*
 	As a method on the data structure the string parameters refer to variable names in
 	c.data wich will be set by converting the lat and long float parameters
@@ -511,20 +519,20 @@ func (c *Config) LatLongToString(latFloat, longFloat float64, params ...string) 
 	latStr, longStr, _ := LatLongToString(latFloat, longFloat)
     var timeNow int64
 
-	if c.realTime {
+	if h.settings.realTime {
 		timeNow = time.Now().UTC().UnixMilli()
 	} else {
-		timeNow = c.messageDate.UnixMilli()
+		timeNow = h.messageDate.UnixMilli()
 	}
 
 	if len(params) == 1 {
-		c.data[params[0]] = latStr + ", " + longStr
-		c.history[params[0]] = timeNow
+		h.data[params[0]] = latStr + ", " + longStr
+		h.history[params[0]] = timeNow
 	} else {
-		c.data[params[0]] = latStr
-		c.data[params[1]] = longStr
-		c.history[params[0]] = timeNow
-		c.history[params[1]] = timeNow
+		h.data[params[0]] = latStr
+		h.data[params[1]] = longStr
+		h.history[params[0]] = timeNow
+		h.history[params[1]] = timeNow
 	}
 	
 	return nil
@@ -562,15 +570,15 @@ func LatLongToString(latFloat, longFloat float64) (string, string, error) {
 }
 
 
-func (c *Config) WriteSentence(manCode string, sentenceName string) (string, error) {
+func (h *Handle) WriteSentence(manCode string, sentenceName string) (string, error) {
 	sentenceType := strings.ToLower(sentenceName)
-	key, varList := findInMap(sentenceType, c.Sentences)
+	key, varList := findInMap(sentenceType, h.sentences.formats)
 	madeSentence := strings.ToUpper(manCode + sentenceName)
 
 	if len(key) > 1 {
 		for _, v := range varList {
-			_, vFormats := findInMap(v, c.Variables)
-			value, ok := c.data[v]
+			_, vFormats := findInMap(v, h.sentences.variables)
+			value, ok := h.data[v]
 			if ok && len(value)>0 {
 				if len(v) == 0 || v == "n/a" {
 					madeSentence += ","
