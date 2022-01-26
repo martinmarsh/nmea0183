@@ -11,12 +11,16 @@ import (
 
 func main() {
 	// Load config file from working directory or create an example one if not found
-	nm, err := nmea0183.Load()
+	var sentences nmea0183.Sentences
+
+	err := sentences.Load()
 	if err != nil{
 		fmt.Println(fmt.Errorf("**** Error config: %w", err))
-		nmea0183.SaveConfig()
-		nm = nmea0183.Create(nmea0183.DefaultSentances())
+		sentences.SaveDefault()
+		panic(err)
 	}
+
+	nm := sentences.MakeHandle()
 
 	// set time period in seconds to remove old values (<= 0 to disable) and if real time processing
 	nm.Preferences(60, true)

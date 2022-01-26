@@ -8,7 +8,10 @@ import (
 
 
 func verify_sentence(sentence string, t *testing.T){
-	nm:= Create(DefaultSentances())
+	
+	sentences := DefaultSentances()
+	nm:= sentences.MakeHandle()
+
 	preFix, postFix, err := nm.Parse(sentence)
 	if err != nil {
 		t.Error("parsing input sentence error: %w", err)
@@ -23,7 +26,8 @@ func verify_sentence(sentence string, t *testing.T){
 }
 
 func TestConfig(t *testing.T) {
-    _, e := Load("./example")
+	var sentences Sentences
+	e := sentences.Load("./example")
 	if e != nil {
 		errStr := fmt.Errorf("Config failed with error: %w", e)
 		t.Error(errStr)
@@ -89,7 +93,10 @@ func TestConvetFloatLatLong(t *testing.T) {
 }
 
 func TestZDA(t *testing.T){
-	nm, _ := Load("./example")
+	var sentences Sentences
+	sentences.Load("./example")
+	nm := sentences.MakeHandle()
+	
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 	if nm.data["time"] != "11:09:10.59" {
 		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])
@@ -118,7 +125,8 @@ func TestZDACreate(t *testing.T){
 		 "dpt": {},
 		 "toff": {},	   
 		}
-	nm := Create(&sentences{formats: formats, variables: variables})
+	sentences := MakeSentences(formats, variables)
+	nm := sentences.MakeHandle()
 	nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6D")
 	if nm.data["time"] != "11:09:10.59" {
 		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])
@@ -131,16 +139,17 @@ func TestZDACreate(t *testing.T){
 	}
 	
 	// Test loading another create is independant
-	nm2 := Create(&sentences{formats: formats, variables: variables})
+	nm2 := sentences.MakeHandle()
 	if len(nm2.data) != 0 || len(nm2.history) !=0 || len(nm.data) == 0 || len(nm.history) == 0 {
 		t.Errorf("Second Create call failed - check that they are independan ")
 	}
-	nm3 := Create(&sentences{formats: formats, variables: variables})
+	nm3 := sentences.MakeHandle()
 	nm3.Parse("$GPZDA,120910.59,15,09,2020,01,30*6E")
 	if nm3.data["time"] != "12:09:10.59" {
 		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])
 	}
-	nm4 := Create(&sentences{formats: formats, variables: variables})
+
+	nm4 := sentences.MakeHandle()
 	nm4.Parse("$GPZDA,130910.59,15,09,2020,01,30*6F")
 	if nm4.data["time"] != "13:09:10.59" {
 		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])

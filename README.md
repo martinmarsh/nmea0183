@@ -10,7 +10,7 @@
 - Same configuration allows parsing and writing of defined sentences
 - Optional use of yaml, json or toml config file to externally change sentence and/or variable definitions post build
 - Collects data across multiple sentences to merge into one results set
-- Readable values extracted eg position = "50° .3986'N, 000° 54.6007'W
+- Readable values extracted eg position = "50° 00.3986'N, 000° 54.6007'W
 - Conversion funtions to float values
 - Handles Removing old data
 
@@ -72,8 +72,11 @@ a copy of this file is in demo/main.go
     )
 
     func main() {
-        // For easy start use built in sentences and variable definitions
-        nm:= nmea0183.Create()
+        // For easy start use built in sentences
+        sentences := nmea0183.DefaultSentances()
+
+        // Now create a handle to sentence processing, config and processed data
+        nm:= sentences.MakeHandle()
 
         // Now parse a sentence
         nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
@@ -117,10 +120,13 @@ definitions.  This is how:
     dpt := []string {"dbt","toff"}
 
     // These defintions are placed in map with the key matching the sentence name 
-    sentences := map[string][]string {"zda": zda, "dpt": dpt}
+    formats := map[string][]string {"zda": zda, "dpt": dpt}
 
     // Use create to load your only your sentences - no built in ones will be added
-    nm := Create(sentences)
+    sentences := MakeSentences(formats)
+
+    // create handle
+	nm := sentences.MakeHandle()
 
     // Now just parse sentences
     nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6F")
@@ -165,7 +171,10 @@ Here is an example of variables which you could set to use instead of the defaul
         "status": {"A"},                      // status of fix A = ok ie 1 V = fail ie 0
         }
 
+        sentences := MakeSentences(formats, variables)
 
+        // create handle
+	    nm := sentences.MakeHandle()
         nm := Create(sentences, variables)
         nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6F")
         nm.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75")
@@ -180,18 +189,19 @@ For more fexibilty and the advantage of being able to change the parsing without
 go and rebuild configuations can be read and written to nmea_config.yaml file in the working directory.
 Instead of Create but use Load.
 
-    handle, err := nmea0183.Load()
+    var sentences nmea0183.Sentences
+    err := sentences.Load()
     handle.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 
 Can specify location of config file and type eg ymal or json
 
-    handle, err := nmea0183.Load(".", "filename", "ymal")
+    err := sentences.Load(".", "filename", "ymal")
 
 A default Config file can be written using default settings:
 
-    nmea0183.SaveConfig()
+    sentences.SaveDefault()
     or
-    nmea0183.SaveConfig(".", "filename", "ymal")
+    sentences.SaveDefault(".", "filename", "ymal")
 
 ### Cleaning up old data
 

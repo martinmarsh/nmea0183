@@ -8,8 +8,12 @@ import (
 
 
 func main() {
-// For easy start use built in sentences and variable definitions
-nm:= nmea0183.Create(nmea0183.DefaultSentances())
+
+// For easy start use built in sentences
+sentences := nmea0183.DefaultSentances()
+
+// Now create a handle to sentence processing, config and processed data
+nm:= sentences.MakeHandle()
 
 // Now parse a sentence
 nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
