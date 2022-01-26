@@ -16,8 +16,7 @@ func main() {
 	err := sentences.Load()
 	if err != nil{
 		fmt.Println(fmt.Errorf("**** Error config: %w", err))
-		sentences.SaveDefault()
-		panic(err)
+		sentences.SaveLoadDefault()
 	}
 
 	nm := sentences.MakeHandle()

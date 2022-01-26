@@ -57,7 +57,7 @@ func (sent *Sentences) Load(setting ...string) error {
 	return err
 }
 
-func (sent *Sentences) SaveDefault(setting ...string){
+func (sent *Sentences) SaveLoadDefault(setting ...string){
 	configSet := []string{".", "nmea_sentences", "yaml"}
 	copy(configSet, setting)
 
@@ -67,11 +67,13 @@ func (sent *Sentences) SaveDefault(setting ...string){
 
 	viper.SetDefault("formats", GetDefaultFormats())
 	viper.SetDefault("variables", GetDefaultVars())
-	err := viper.ReadInConfig() // Find and read the config file
+	viper.ReadInConfig() // Find and read the config file
 
-    viper.GetViper()
 	//Don't overwrite if file exists
-	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-		viper.SafeWriteConfig()
-	}
+	//if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+	viper.SafeWriteConfig()
+	//}
+	sent.formats = viper.GetStringMapStringSlice("formats")
+	sent.variables = viper.GetStringMapStringSlice("variables")
+
 }
