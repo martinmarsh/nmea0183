@@ -178,7 +178,7 @@ func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, er
 					messageDate, err := time.Parse(time.RFC3339, rcDate)
 					if err == nil{
 						h.messageDate = messageDate
-						results["datetime"] = rcDate
+
 
 					}
 				}	

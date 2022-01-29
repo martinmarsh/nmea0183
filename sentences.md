@@ -19,7 +19,6 @@ AAM - Waypoint Arrival Alarm
 
 APB - Autopilot Sentence "B"
 
-
 ---
 
 ## Actisense NGW-1 2000 to 0183
@@ -27,7 +26,6 @@ APB - Autopilot Sentence "B"
 AAM - Waypoint Arrival Alarm
 
 APB - Autopilot Sentence "B"
-
 
 TW,
 HDG, HDM, HDT

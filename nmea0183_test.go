@@ -92,22 +92,21 @@ func TestConvetFloatLatLong(t *testing.T) {
 
 }
 
-func TestZDA(t *testing.T){
+func TestZDA(t *testing.T){;
 	var sentences Sentences
 	sentences.Load("./example")
 	nm := sentences.MakeHandle()
 	
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
-	if nm.data["time"] != "11:09:10.59" {
-		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])
-	}
-	if nm.data["day"] != "15" || nm.data["month"] != "09" ||nm.data["year"] != "2020" {
-		t.Errorf("Icorrect data got %s %s %s", nm.data["day"], nm.data["month"], nm.data["year"])
-	}
-	if nm.data["tz"] != "00:00" {
-		t.Errorf("Error TZ time incorrectly parsed got %s", nm.data["tz"])
+	if nm.data["datetime"] != "2020-09-15T11:09:10.59+00:00" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.data["datetime"])
 	}
 
+	nm.Parse("$GPZDA,110910.59,15,09,21,01,40*69")
+	if nm.data["datetime"] != "2021-09-15T11:09:10.59+01:40" {
+		t.Errorf("Error time incorrectly parsed got %s", nm.data["datetime"])
+	}
+	
 }
 
 
@@ -118,10 +117,10 @@ func TestZDACreate(t *testing.T){
 	formats := map[string][]string {"zda": zda, "dpt": dpt}
 	variables := map[string]string {
 		 "time": "hhmmss.ss",
-		 "day": "x",
-		 "month": "x",
-		 "year": "x",
-		 "tz": "tz_h,tz:m",
+		 "day": "DD_day",
+		 "month": "DD_month",
+		 "year": "DD_year",
+		 "tz": "tz_h,tz_m",
 		 "dpt": "",
 		 "toff": "",	   
 		}

@@ -34,14 +34,13 @@ formats:
   - mag_var
   hdm:
   - hdm
-  - hdm_true
   rmc:
-  - time
+  - fix_time
   - status
   - position
   - sog
   - tmg
-  - date
+  - fix_date
   - mag_var
   - faa_mode
   - nav_status
@@ -56,11 +55,7 @@ formats:
   - n/a
   - wd
   zda:
-  - time
-  - day
-  - month
-  - year
-  - tz
+  - datetime
 variables:
   acir: A
   ap_loran: A
@@ -69,21 +64,20 @@ variables:
   aper: A
   arrival_radius: x.x
   arrived_circle: A
-  bdp_true: T
   bearing_origin_to_waypt: xxx,T
   bearing_position_to_waypt: xxx,T
   bearing_to_waypt: xxx,T
   bod: x.x
   bod_true: T
-  bpd: x.x
-  date: ddmmyy
+  datetime: hhmmss,day,month,year,tz
   day: DD_day
   dbt: x.x
   did: c--c
   dw: x.x
   faa_mode: A
-  hdm: x.x
-  hdm_true: T
+  fix_date: ddmmyy
+  fix_time: hhmmss.ss
+  hdm: x.x,T
   hts: xxx,T
   lat: lat,NS
   long: long,WE
@@ -96,7 +90,6 @@ variables:
   sog: x.x
   status: A
   stw: x.x
-  time: hhmmss.ss
   tmg: x.x
   toff: -x.x
   tz: tz_h,tz_m

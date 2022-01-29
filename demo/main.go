@@ -58,6 +58,9 @@ fmt.Println(dpt)
 zda, _ := nm.WriteSentence("gp", "zda")
 fmt.Println(zda)
 
+//Data is built and updated as sentences are parsed also can
+fmt.Println(nm.GetMap())
+//also can get date of change
 fmt.Println(nm.DateMap())
 
 }
