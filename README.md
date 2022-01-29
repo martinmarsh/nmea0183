@@ -155,10 +155,10 @@ Here is an example of variables which you could set to use instead of the defaul
     sentences := map[string][]string {"zda": zda, "rmc": rmc}
 
     // now define some variables we might like to use mapping them to internal templates
-    variables := map[string][]string {
-        "pos_time": {"hhmmss.ss"},
-        "zda_time": {"hhmmss.ss"},
-        "date": {"ddmmyy"},
+    variables := map[string]string {
+        "pos_time": "hhmmss.ss",
+        "zda_time": "hhmmss.ss",
+        "date": "ddmmyy",
         "mag_var": {"x.x", "w"},              // Mag Var E positive, W negative
         "day": {"DD_day"},
         "month": {"DD_month"},
@@ -263,7 +263,7 @@ Indicates the status of arrival (entering the arrival circle, or passing the per
 | 2     | passed_wpt     | A            | 1                 | V             |
 | 3     | arrival_radius | x.x          | 1                 | 4.5           |
 | 4     | radius_units   | A            | 1                 | N             |
-| 5     | waypt_id       | str          | 1                 | Chich         |
+| 5     | waypt_id       | A            | 1                 | Chich         |
 
 **arrived_circle**:  Status A = Arrival Circle Entered,  V = not enterred
 
@@ -293,15 +293,15 @@ Sentence def:
 
        APA: ap_status,ap_loran,xte,arrived_circle,passed_waypt,bearing_to_waypt,waypt_id
 
-| Field | Name             | Format      | No of Fields matched | Example Value |
-| ----- | ---------------- | ----------- | -------------------- | ------------- |
-| 1     | ap_status        | A           | 1                    | V             |
-| 2     | ap_loran         | A           | 1                    | V             |
-| 3,4,5 | xte              | Lx.xN, R, N | 3                    | L3.4N         |
-| 6     | arrived_circle   | A           | 1                    | A             |
-| 7     | passed_waypt     | A           | 1                    | A             |
-| 8,9   | bearing_to_waypt | x.xT, T     | 2                    | 123°M          |
-| 10    | waypt_id         | str         | 1                    | Chich         |
+| Field | Name             | Format  | No of Fields matched | Example Value |
+| ----- | ---------------- | ------- | -------------------- | ------------- |
+| 1     | ap_status        | A       | 1                    | V             |
+| 2     | ap_loran         | A       | 1                    | V             |
+| 3,4,5 | xte              | x.x,R N | 3                    | L3.4N         |
+| 6     | arrived_circle   | A       | 1                    | A             |
+| 7     | passed_waypt     | A       | 1                    | A             |
+| 8,9   | bearing_to_waypt | x.x,T   | 2                    | 123°M         |
+| 10    | waypt_id         | A       | 1                    | Chich         |
 
 **ap_status**:  Status V = Loran-C Blink or SNR warning V = general warning flag or other navigation systems when a reliable fix is not available
 
@@ -339,18 +339,18 @@ Sentence def:
 
        apb: ap_status,ap_loran,xte,arrived_circle,passed_waypt,bearing_origin_to_waypt,waypt_id,bearing_position_to_waypt,hts,ap_mode
 
-| Field  | Name                      | Format      | No of Fields matched | Example Value |
-| ------ | ------------------------- | ----------- | -------------------- | ------------- |
-| 1      | ap_status                 | A           | 1                    | V             |
-| 2      | ap_loran                  | A           | 1                    | V             |
-| 3,4,5  | xte                       | Lx.xN, R, N | 3                    | L3.4N         |
-| 6      | arrived_circle            | A           | 1                    | A             |
-| 7      | passed_waypt              | A           | 1                    | A             |
-| 8,9    | bearing_origin_to_waypt   | x.xT, T     | 2                    |               |
-| 10     | waypt_id                  | str         | 1                    | Chich         |
-| 11, 12 | bearing_position_to_waypt | x.xT, T     | 2                    | 123°T         |
-| 13, 14 | hts                       | x.xT, T     | 2                    | 121°M         |
-| 15     | ap_mode                   | A           | 1                    |               |
+| Field  | Name                      | Format  | No of Fields matched | Example Value |
+| ------ | ------------------------- | ------- | -------------------- | ------------- |
+| 1      | ap_status                 | A       | 1                    | V             |
+| 2      | ap_loran                  | A       | 1                    | V             |
+| 3,4,5  | xte                       | x.x,R,N | 3                    | L3.4N         |
+| 6      | arrived_circle            | A       | 1                    | A             |
+| 7      | passed_waypt              | A       | 1                    | A             |
+| 8,9    | bearing_origin_to_waypt   | x.x,T   | 2                    |               |
+| 10     | waypt_id                  | str     | 1                    | Chich         |
+| 11, 12 | bearing_position_to_waypt | x.x,T   | 2                    | 123°T         |
+| 13, 14 | hts                       | x.x,T   | 2                    | 121°M         |
+| 15     | ap_mode                   | A       | 1                    |               |
 
 **ap_status**: Status A = Data valid V = Loran-C Blink or SNR warning V = general warning flag or other navigation systems when a reliable fix is not available
 
@@ -398,17 +398,17 @@ This is one of the sentences commonly emitted by GPS units. The default config w
        "rmc": {"time", "status", "position", "sog", "tmg", "date", "mag_var", "faa_mode,"nav_status"},
 
 
-| Field   | Name       | Format                     | No of Fields matched | Example Value                 |
-| ------- | ---------- | -------------------------- | -------------------- | ----------------------------- |
-| 1       | time       | hhmmss.ss                  | 1                    | V                             |
-| 2       | gps_status | A                          | 1                    | V                             |
-| 3,4,5,6 | position   | lat,lat_NS,pos_long,pos_WE | 4                    | 50° 10.3986'N, 000° 54.6007'W |
-| 7       | sog        | x.x                        | 1                    | 4.3                           |
-| 8       | tmg        | x.x                        | 1                    | 121                           |
-| 9       | date       | ddmmyy                     | 2                    | 2020-09-15                    |
-| 10, 11  | mag_var    | x.x, w                     | 2                    | -1.4                          |
-| 12      | faa_mode   | A                          | 1                    | A                             |
-| 13      | nav_status | A                          | 1                    | A                             |
+| Field   | Name       | Format         | No of Fields matched | Example Value                 |
+| ------- | ---------- | -------------- | -------------------- | ----------------------------- |
+| 1       | time       | hhmmss.ss      | 1                    | V                             |
+| 2       | gps_status | A              | 1                    | V                             |
+| 3,4,5,6 | position   | lat,NS,long,WE | 4                    | 50° 10.3986'N, 000° 54.6007'W |
+| 7       | sog        | x.x            | 1                    | 4.3                           |
+| 8       | tmg        | x.x            | 1                    | 121                           |
+| 9       | date       | ddmmyy         | 2                    | 2020-09-15                    |
+| 10, 11  | mag_var    | x.x,w          | 2                    | -1.4                          |
+| 12      | faa_mode   | A              | 1                    | A                             |
+| 13      | nav_status | A              | 1                    | A                             |
 
 **time**: UTC of position fix, hh is hours, mm is minutes, ss.ss is seconds.
 
@@ -458,8 +458,7 @@ Actisense NGW-1 maps: 2000 -> 183, 0183 -> 2000
 | 2     | day   | x          | DD_day               | 25            |
 | 3     | month | x          | DD_month             | 12            |
 | 7     | year  | x          | DD_year              | 2021          |
-| 8     | tz    | tz_h, tz:m | 2                    | 12:23         |
-
+| 8     | tz    | tz_h,tz_m | 2                    | 12:23         |
 
 **time** UTC time (hours, minutes, seconds, may have fractional subseconds)
 
@@ -476,3 +475,4 @@ Checksum
 Example: $GPZDA,160012.71,11,03,2004,-1,00*7D
 
 ---
+

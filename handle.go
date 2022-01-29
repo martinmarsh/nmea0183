@@ -124,28 +124,25 @@ func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, er
 	parts := strings.Split(nmea[1:end_byte], ",")
 	preFix := parts[0][:2]
 	sentenceType := strings.ToLower(parts[0][2:])
-	key, varList := findInMap(sentenceType, h.sentences.formats)
+
 	results := make(map[string]string)
 	date := ""
 	dateTypes := make(map[string]string)
 
-	if len(key) > 0 {
+	if varList, found := h.sentences.formats[sentenceType]; found{
 		fieldPointer := 1
-		var typeStr string
 		for varPointer := 0; varPointer < len(varList); varPointer++ {
-			varName, templateList := findInMap(varList[varPointer], h.sentences.variables)
 			conVar := ""
-			typeStr = ""
-			if len(varName) > 0 && fieldPointer < len(parts){
-				for _, template := range templateList {
-					conVar, typeStr = convert(parts[fieldPointer], template, conVar)
-					fieldPointer++
+			varName := varList[varPointer]
+			if template, found := h.sentences.variables[varName]; found && fieldPointer < len(parts){
+				fType, cv := getConversion(template)
+				if fieldPointer + cv.fCount <= len(parts){
+						conVar = cv.from(fieldPointer, &parts)
+						dateTypes[fType] = varName
+				} else {
+						conVar = ""
 				}
-				for _, v := range dateTypeTemplates {
-					if v == typeStr {
-						dateTypes[v] = conVar
-					}
-				}
+				fieldPointer += cv.fCount
 				results[varName] = conVar
 			} else {
 				fieldPointer++
@@ -251,31 +248,28 @@ func (h *Handle) LatLongToString(latFloat, longFloat float64, params ...string) 
 	return nil
 }
 
+
 func (h *Handle) WriteSentence(manCode string, sentenceName string) (string, error) {
 	sentenceType := strings.ToLower(sentenceName)
-	key, varList := findInMap(sentenceType, h.sentences.formats)
 	madeSentence := strings.ToUpper(manCode + sentenceName)
 
-	if len(key) > 1 {
+	if varList, found := h.sentences.formats[sentenceType]; found {
 		for _, v := range varList {
-			_, vFormats := findInMap(v, h.sentences.variables)
-			value, ok := h.data[v]
-			if ok && len(value)>0 {
-				if len(v) == 0 || v == "n/a" {
-					madeSentence += ","
-				}else{
-					m, err := getSentencePart(value, vFormats)
-					if err != nil{
-						return "", fmt.Errorf("field error definition %w", err)
+			if vFormat, foundVar := h.sentences.variables[v]; foundVar {
+				_, cv := getConversion(vFormat)
+				if value, ok := h.data[v]; !ok || len(v) == 0 || v == "n/a" || len(value) == 0{
+					for i:=0; i < cv.fCount; i++{
+						madeSentence += ","
 					}
-					madeSentence += m 
+				}else{
+					
+					madeSentence += "," + cv.to(value) 
 				}
 			}else{
-				for i:=0; i<len(vFormats); i++{
-					madeSentence += ","
-				}
+				madeSentence += ","
 			}
 		}
+	
 		madeSentence = "$" + madeSentence
 		checksum := checksum(madeSentence)
 		madeSentence += "*" + checksum

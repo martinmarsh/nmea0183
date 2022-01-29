@@ -8,11 +8,12 @@ import (
 
 
 type Sentences struct {
-	formats, variables map[string][]string
+	formats map[string][]string
+	variables map[string]string
 }
 
 
-func MakeSentences(formats, variables map[string][]string) *Sentences{
+func MakeSentences(formats  map[string][]string, variables map[string]string) *Sentences{
 	sent := Sentences{formats: formats, variables: variables}
 	return &sent
 }
@@ -27,7 +28,7 @@ func (sent *Sentences) AddFormat(key string, form []string){
 	sent.formats[key] = form
 }
 
-func (sent *Sentences) AddVariable(key string, varFormat []string){
+func (sent *Sentences) AddVariable(key string, varFormat string){
 	sent.variables[key] = varFormat
 }
 
@@ -52,7 +53,7 @@ func (sent *Sentences) Load(setting ...string) error {
 	}
 
 	sent.formats = viper.GetStringMapStringSlice("formats")
-	sent.variables = viper.GetStringMapStringSlice("variables")
+	sent.variables = viper.GetStringMapString("variables")
 
 	return err
 }
@@ -74,6 +75,6 @@ func (sent *Sentences) SaveLoadDefault(setting ...string){
 	viper.SafeWriteConfig()
 	//}
 	sent.formats = viper.GetStringMapStringSlice("formats")
-	sent.variables = viper.GetStringMapStringSlice("variables")
+	sent.variables = viper.GetStringMapString("variables")
 
 }

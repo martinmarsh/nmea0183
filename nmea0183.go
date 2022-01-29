@@ -8,9 +8,206 @@ import (
 	"time"
 )
 
-var dateTypeTemplates = []string {"day", "month", "year", "date", "time", "zone"}
+type varTypeStruct struct {
+    fType string
+    fConv varFormatStruct 
+}
+
+type varFormatStruct struct {
+    fCount	int
+    from   func(int, *[]string) string
+	to  func(string) string
+}
 
 
+func getConversion(format string) (string, varFormatStruct){
+	conv := *makeConv()
+	if varConv, ok := conv[format]; ok{
+		return varConv.fType, varConv.fConv
+	} else {
+		return "", varFormatStruct {
+				fCount: 1, from: func(pos int, parts *[]string) string {return ""},
+				to: func(data string) string {return ""},
+			}
+	}
+}
+
+func makeConv() *map[string] varTypeStruct{
+	timeConv := varFormatStruct {
+		fCount: 1,
+		from: func(pos int, parts *[]string) string { return timeConv((*parts)[pos]) },
+		to: func(data string) string {
+			return data[:2]+data[3:5]+data[6:]
+		},
+	}
+
+	copyField := varFormatStruct {
+		fCount: 1,
+		from: func(pos int, parts *[]string) string { return (*parts)[pos] },
+		to: func(data string) string {
+				return data
+		},
+	}
+
+	compass := varFormatStruct {
+		fCount: 2,
+		from: func(pos int, parts *[]string) string {
+			 return (*parts)[pos]+ "°" + (*parts)[pos+1] 
+			},
+		to: func(data string) string {
+			l := len(data)
+			if l > 2 {
+			   return data[:l-3] + "," + string(data[l-1])
+			}
+			return  ","
+		},
+	}
+
+	deviation := varFormatStruct {
+		fCount: 2,
+		from: func(pos int, parts *[]string) string {
+			data :=  (*parts)[pos]
+			data2 :=  (*parts)[pos+1]
+			if data2 == "W" || data2 == "w" {
+				return "-" + data
+			}
+			return data 
+		},
+		to: func(data string) string {
+			if data[0] == '-' {
+				return  data[1:] + ",W"
+			}
+			return data + ",E"
+		},
+	}
+
+	xte := varFormatStruct {
+		fCount: 3,
+		from: func(pos int, parts *[]string) string {
+			 return (*parts)[pos+1] + (*parts)[pos] + (*parts)[pos+2] 
+			},
+		to: func(data string) string {
+			l := len(data)
+			if l > 2 {
+				val := data[1:l-1]
+			   return val + "," + string(data[1]) + "," + string(data[l-1])
+			} 
+			return  ",,"
+		},
+	}
+
+	lat := varFormatStruct {
+		fCount: 2,
+		from: func(pos int, parts *[]string) string {
+			 return  latStr((*parts)[pos]) + (*parts)[pos+1]
+			},
+		to: func(data string) string {
+			return latVar(data) + "," + latNVar(data)
+		},
+	}
+
+	long := varFormatStruct {
+		fCount: 2,
+		from: func(pos int, parts *[]string) string {
+			return  longStr((*parts)[pos]) + (*parts)[pos+1]
+			},
+		to: func(data string) string {
+			return longVar(data) + "," + longWeVar(data)
+		},
+	}
+
+	 position := varFormatStruct {
+		fCount: 4,
+		from: func(pos int, parts *[]string) string {
+			 return latStr((*parts)[pos]) + (*parts)[pos+1] + ", " + longStr((*parts)[pos+2]) + (*parts)[pos+3] 
+			},
+		to: func(data string) string {
+			return latVar(data) + "," + latNVar(data) + "," + posLongVar(data) + "," + posWeVar(data)
+		},
+	}
+
+	date := varFormatStruct {
+		fCount: 1,
+		from: func(pos int, parts *[]string) string {
+			data  := (*parts)[pos]
+			date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
+			if err == nil {
+				return date
+			}
+			return ""
+		},
+		to: func(data string) string {
+			return data[8:] + data[5:7] + data[2:4]
+		},
+	}
+
+	varConv := map[string] varTypeStruct {
+		"hhmmss.ss": {fType: "time", fConv: timeConv},
+		"plan_hhmmss.ss": {fType: "plan time", fConv: timeConv},
+		"A": {fType: "status", fConv: copyField},
+		"c--c": {fType: "string", fConv: copyField},
+		"x.x": {fType: "number", fConv: copyField},
+		"xxx,T": {fType: "compass", fConv: compass},
+		"x.x,R,N": {fType: "cross track error", fConv: xte},
+		"lat,NS": {fType: "lat", fConv: lat},
+		"long,WE": {fType: "long", fConv: long},
+		"lat,NS,long,WE": {fType: "position", fConv: position},
+		"ddmmyy": {fType: "date", fConv: date},
+		"plan_ddmmyy": {fType: "plan date", fConv: date},
+		"x.x,w": {fType: "deviation", fConv: deviation},
+	}
+
+	return &varConv
+}  
+	
+//var dateTypeTemplates = []string {"day", "month", "year", "date", "time", "zone"}
+
+func latStr(data string) string {
+	d, _ := strconv.ParseInt(data[:2], 10, 32)
+	m, _ := strconv.ParseFloat(data[2:], 32)
+	return fmt.Sprintf("%02d° %07.4f'", d, m)
+}
+
+func longStr(data string) string {
+	d, _ := strconv.ParseInt(data[:3], 10, 32)
+	m, _ := strconv.ParseFloat(data[3:], 32)
+	return fmt.Sprintf("%03d° %07.4f'", d, m)
+}
+
+func latVar(data string) string {
+	split :=  strings.SplitN(data[4:], ",", 2)
+	l := len(split[0]) - 2
+	return data[:2] + split[0][1:l]
+}
+
+func longVar(data string) string {
+	l := len(data) - 2
+	return data[:3] + data[5:l]
+}
+
+func posLongVar(data string) string {
+	split :=  strings.SplitN(data[5:], ",", 2)
+	l := len(split[1]) - 2
+	return split[1][1:4] + split[1][7:l]
+}
+
+func longWeVar(data string) string {
+	l := len(data)-1
+	return string(data[l])
+}
+
+func posWeVar(data string) string {
+	split :=  strings.SplitN(data[5:], ",", 2)
+	l := len(split[1])-1
+	return string(split[1][l])
+}
+
+func latNVar(data string) string {
+	split :=  strings.SplitN(data[4:], ",", 2)
+	l := len(split[0])-1
+	return string(split[0][l])
+}
+	
 func setUp() *Handle {
 	var h Handle
 	var set	settings
@@ -38,112 +235,59 @@ func timeConv(data string) string{
 	return ""
 }
 
-func convert(data string, template string, conVar string) (string, string) {
+/*
+func convert(fieldPos int, parts []string, template string) (string, string, int) {
+	data := parts[fieldPos]
 	switch template {
-		case "hhmmss.ss":
-			t := timeConv(data)
-			if len(t) > 0{
-				return conVar + t, "time"
-			}
-			return "", ""
-
-		case "plan_hhmmss.ss":
-			t := timeConv(data)
-			if len(t) > 0{
-				return conVar + t, "plan_time"
-			}
-			return "", ""
+		
 		case "DD_day":
-			return data, "day"
+			return data, "day", 1
 		case "DD_month":
-			return data, "month"
+			return data, "month", 1
 		case "DD_year":
-			return data, "plan_year"
+			return data, "plan_year", 1
 		case "DD_day_plan":
-			return data, "plan_day"
+			return data, "plan_day", 1
 		case "DD_month_plan":
-			return data, "plan_month"
+			return data, "plan_month", 1
 		case "DD_year_plan":
-			return data, "plan_year"
-		case "x.x", "-x.x", "Lx.xN", "x.xT":
-			return data, "float"
+			return data, "plan_year", 1
+		case "-x.x",
+			return data, "float", 1
 		case "x":
-			return data, "int"
+			return data, "int", 1
 		case "tz_h":
-			return data, "tzh"
+			return data, "tzh", 1
 		
-		case "tz:m":
-			return conVar + ":" + data, "zone"
+		case "tz_h,tz:m":
+			return ":" + data, "zone", 1
+
 		case "plan_tz:m":
-			return conVar + ":" + data, "plan_zone"
+			return ":" + data, "plan_zone", 1
 		
-		case "A":
-			return data, "A"
-
-		case "str":
-			return data, "str"
-
-		case "T":
-			return conVar + "°"+ data, "T"
-
+	
 		case "w":
 			if data == "W" || data == "w" {
-				return "-" + conVar, "float"
+				return "-", "float", 1
 			}
-			return conVar, "west"
+			return data, "west", 1
 
 		case "s":
 			if data == "S" || data == "s" {
-				return "-" + conVar, "float"
+				return "-" , "float", 1
 			}
-			return conVar, "south"
+			return data, "south", 1
 
 		case "R":
-			return data + conVar, ""
+			return data, "", 1
 
 		case "N":
-			return conVar + data, "xte"
+			return  data, "xte", 1
 
-		case "lat":
-			d, _ := strconv.ParseInt(data[:2], 10, 32)
-			m, _ := strconv.ParseFloat(data[2:], 32)
-			return fmt.Sprintf("%02d° %07.4f'", d, m), ""
-
-		case "long":
-			d, _ := strconv.ParseInt(data[:3], 10, 32)
-			m, _ := strconv.ParseFloat(data[3:], 32)
-			return fmt.Sprintf("%03d° %07.4f'", d, m), ""
 		
-		case "pos_long":
-			d, _ := strconv.ParseInt(data[:3], 10, 32)
-			m, _ := strconv.ParseFloat(data[3:], 32)
-			return conVar + ", " + fmt.Sprintf("%03d° %07.4f'", d, m), ""
-
-		case "long_WE":
-			return conVar + data, "long"
-		
-		case "pos_WE":
-			return conVar + data, "position"
-
-		case "lat_NS":
-			return conVar + data, "lat"
-
-		case "ddmmyy":
-			date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
-			if err == nil {
-				return date, "date"
-			}
-			return "", ""
-
-		case "plan_ddmmyy":
-			date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
-			if err == nil {
-				return date, "plan_date"
-			}
-			return "", ""
-	}
-	return "", ""
+	return "", "", 1
 }
+*/
 
 func DateStrFromStrs(day, month, year string) (string, error){
 	var err error
@@ -162,6 +306,7 @@ func DateStrFromStrs(day, month, year string) (string, error){
 	return fmt.Sprintf("%d-%02d-%02d", y, m, d), err
 }
 
+
 func checksum(s string) string {
 	check_sum := 0
 
@@ -173,17 +318,6 @@ func checksum(s string) string {
 
 	return fmt.Sprintf("%02X", check_sum)
 }
-
-func findInMap(k string, m map[string][]string) (string, []string) {
-
-	for i, v := range m {
-		if i == k {
-			return i, v
-		}
-	}
-	return "", []string{""}
-}
-
 
 func LatLongToFloat(params ...string) (float64, float64, error) {
 	/*
@@ -238,8 +372,6 @@ func LatLongToFloat(params ...string) (float64, float64, error) {
 }
 
 
-
-
 func LatLongToString(latFloat, longFloat float64) (string, string, error) {
 	/*
 	
@@ -272,20 +404,8 @@ func LatLongToString(latFloat, longFloat float64) (string, string, error) {
 }
 
 
-
-func getSentencePart(data string, varItems []string) (string, error){
-	subString := ""
-	lookForward := ""
-	for _, template := range varItems{
-		value, _ :=convertTo183(data, template, lookForward)
-		subString += "," + value
-	}
-
-	return subString, nil
-}
-
-
-func convertTo183(data, template string, forward string) (string, string) {
+/*
+func convertTo183(data, template string) (string, string) {
 	switch template {
 		case "hhmmss.ss", "plan_hhmmss.ss":
 			return data[:2]+data[3:5]+data[6:], ""
@@ -395,4 +515,4 @@ func convertTo183(data, template string, forward string) (string, string) {
 			return data[8:] + data[5:7] + data[2:4], ""
 	}
 	return "", ""
-}
+}*/

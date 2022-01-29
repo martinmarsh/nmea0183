@@ -62,98 +62,44 @@ formats:
   - year
   - tz
 variables:
-  acir:
-  - A
-  ap_loran:
-  - A
-  ap_mode:
-  - A
-  ap_status:
-  - A
-  aper:
-  - A
-  arrival_radius:
-  - x.x
-  arrived_circle:
-  - A
-  bdp_true:
-  - T
-  bearing_origin_to_waypt:
-  - x.xT
-  - T
-  bearing_position_to_waypt:
-  - x.xT
-  - T
-  bearing_to_waypt:
-  - x.xT
-  - T
-  bod:
-  - x.x
-  bod_true:
-  - T
-  bpd:
-  - x.x
-  date:
-  - ddmmyy
-  day:
-  - DD_day
-  dbt:
-  - x.x
-  did:
-  - str
-  dw:
-  - x.x
-  faa_mode:
-  - A
-  hdm:
-  - x.x
-  hdm_true:
-  - T
-  hts:
-  - x.xT
-  - T
-  lat:
-  - lat
-  - lat_NS
-  long:
-  - long
-  - long_WE
-  mag_var:
-  - x.x
-  - w
-  month:
-  - DD_month
-  nav_status:
-  - A
-  passed_waypt:
-  - A
-  position:
-  - lat
-  - lat_NS
-  - pos_long
-  - pos_WE
-  radius_units:
-  - A
-  sog:
-  - x.x
-  status:
-  - A
-  stw:
-  - x.x
-  time:
-  - hhmmss.ss
-  tmg:
-  - x.x
-  toff:
-  - -x.x
-  tz:
-  - tz_h
-  - tz:m
-  waypt_id:
-  - str
-  xte:
-  - Lx.xN
-  - R
-  - "N"
-  year:
-  - DD_year
+  acir: A
+  ap_loran: A
+  ap_mode: A
+  ap_status: A
+  aper: A
+  arrival_radius: x.x
+  arrived_circle: A
+  bdp_true: T
+  bearing_origin_to_waypt: xxx,T
+  bearing_position_to_waypt: xxx,T
+  bearing_to_waypt: xxx,T
+  bod: x.x
+  bod_true: T
+  bpd: x.x
+  date: ddmmyy
+  day: DD_day
+  dbt: x.x
+  did: c--c
+  dw: x.x
+  faa_mode: A
+  hdm: x.x
+  hdm_true: T
+  hts: xxx,T
+  lat: lat,NS
+  long: long,WE
+  mag_var: x.x,w
+  month: DD_month
+  nav_status: A
+  passed_waypt: A
+  position: lat,NS,long,WE
+  radius_units: A
+  sog: x.x
+  status: A
+  stw: x.x
+  time: hhmmss.ss
+  tmg: x.x
+  toff: -x.x
+  tz: tz_h,tz_m
+  waypt_id: c--c
+  xte: x.x,R,N
+  year: DD_year

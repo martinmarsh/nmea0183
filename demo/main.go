@@ -20,7 +20,6 @@ nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 
 // values parsed are merged into a Data map
 fmt.Println(nm.GetMap())
-
 nm.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75")
 fmt.Println(nm.GetMap())
 

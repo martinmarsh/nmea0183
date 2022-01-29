@@ -116,14 +116,14 @@ func TestZDACreate(t *testing.T){
 	dpt := []string {"dbt","toff"}
 
 	formats := map[string][]string {"zda": zda, "dpt": dpt}
-	variables := map[string][]string {
-		 "time": {"hhmmss.ss"},
-		 "day": {"x"},
-		 "month": {"x"},
-		 "year": {"x"},
-		 "tz": {"tz_h", "tz:m"},
-		 "dpt": {},
-		 "toff": {},	   
+	variables := map[string]string {
+		 "time": "hhmmss.ss",
+		 "day": "x",
+		 "month": "x",
+		 "year": "x",
+		 "tz": "tz_h,tz:m",
+		 "dpt": "",
+		 "toff": "",	   
 		}
 	sentences := MakeSentences(formats, variables)
 	nm := sentences.MakeHandle()

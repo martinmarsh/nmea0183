@@ -7,52 +7,52 @@ func DefaultSentances() *Sentences {
     return &defaults
 }
 
-func GetDefaultVars() map[string][]string{
-    vars := map[string][]string {
-        "arrived_circle": {"A"},
-        "passed_waypt": {"A"},
-        "arrival_radius": {"x.x"},
-        "radius_units":{"A"},
-        "waypt_id": {"str"},
-        "ap_status": {"A"},
-        "ap_loran": {"A"},
-        "bearing_to_waypt": {"x.xT","T"},
-        "bearing_origin_to_waypt": {"x.xT","T"},
-        "bearing_position_to_waypt": {"x.xT","T"},
-        "hts": {"x.xT","T"},    // Heading to Steer T True or M magnetic
-        "ap_mode": {"A"},
-        "faa_mode": {"A"},
-        "nav_status": {"A"},
-        "time": {"hhmmss.ss"},
+func GetDefaultVars() map[string]string{
+    vars := map[string]string {
+        "arrived_circle": "A",
+        "passed_waypt": "A",
+        "arrival_radius": "x.x",
+        "radius_units":"A",
+        "waypt_id": "c--c",
+        "ap_status": "A",
+        "ap_loran": "A",
+        "bearing_to_waypt": "xxx,T",
+        "bearing_origin_to_waypt": "xxx,T",
+        "bearing_position_to_waypt": "xxx,T",
+        "hts": "xxx,T",    // Heading to Steer T True or M magnetic
+        "ap_mode": "A",
+        "faa_mode": "A",
+        "nav_status": "A",
+        "time": "hhmmss.ss",
 
 
-        "status": {"A"},                 // status of fix A = ok ie 1 V = fail ie 0
-        "lat": {"lat", "lat_NS"},      // formated latitude
-        "long": {"long","long_WE"},    // formated longitude
-        "position": {"lat", "lat_NS", "pos_long", "pos_WE"}, //formated lat, long
-        "sog": {"x.x"},                 // Speed Over Ground  float knots
-        "tmg": {"x.x"},                 // Track Made Good
-        "date": {"ddmmyy"},
-        "mag_var": {"x.x", "w"},       // Mag Var E positive, W negative
-        "day": {"DD_day"},
-        "month": {"DD_month"},
-        "year": {"DD_year"},
-        "tz": {"tz_h", "tz:m"},   // Datetime from ZDA if available - tz:m returns minutes part of tx as hh:mm format
-        "xte": {"Lx.xN", "R", "N"},      // Cross Track Error turn R or L eg prefix L12.3N post fix  N = Nm
-        "acir": {"A"},           // Arrived at way pt circle
-        "aper": {"A"},           // Perpendicular passing of way pt
-        "bod": {"x.x"},           // Bearing origin to destination
-        "bod_true": {"T"},        // Bearing origin to destination True
-        "did": {"str"},           //Destination Waypoint ID as a str
-        "bpd": {"x.x"},
-        "bdp_true": {"T"},        // Bearing, present position to Destination True
+        "status": "A",                 // status of fix A = ok ie 1 V = fail ie 0
+        "lat": "lat,NS",      // formated latitude
+        "long": "long,WE",    // formated longitude
+        "position": "lat,NS,long,WE", //formated lat, long
+        "sog": "x.x",                 // Speed Over Ground  float knots
+        "tmg": "x.x",                 // Track Made Good
+        "date": "ddmmyy",
+        "mag_var": "x.x,w",       // Mag Var E positive, W negative
+        "day": "DD_day",
+        "month": "DD_month",
+        "year": "DD_year",
+        "tz": "tz_h,tz_m",   // Datetime from ZDA if available - tz:m returns minutes part of tx as hh:mm format
+        "xte": "x.x,R,N",      // Cross Track Error turn R or L eg prefix L12.3N post fix  N = Nm
+        "acir": "A",           // Arrived at way pt circle
+        "aper": "A",           // Perpendicular passing of way pt
+        "bod": "x.x",           // Bearing origin to destination
+        "bod_true": "T",        // Bearing origin to destination True
+        "did": "c--c",           //Destination Waypoint ID as a str
+        "bpd": "x.x",
+        "bdp_true": "T",        // Bearing, present position to Destination True
            // Heading to Steer True
-        "hdm": {"x.x"},          // Heading Magnetic
-        "hdm_true": {"T"},      // heading true or Manetic
-        "dbt": {"x.x"},          // Depth below transducer
-        "toff": {"-x.x"},         // Transducer offset -ve from transducer to keel +ve transducer to water line
-        "stw": {"x.x"},          // Speed Through Water float knots
-        "dw":  {"x.x"},          // Water distance since reset float knots
+        "hdm": "x.x",          // Heading Magnetic
+        "hdm_true": "T",      // heading true or Manetic
+        "dbt": "x.x",          // Depth below transducer
+        "toff": "-x.x",         // Transducer offset -ve from transducer to keel +ve transducer to water line
+        "stw": "x.x",          // Speed Through Water float knots
+        "dw":  "x.x",          // Water distance since reset float knots
        
     }
 
