@@ -21,6 +21,7 @@ type varFormatStruct struct {
 
 
 func getConversion(format string) (string, varFormatStruct){
+	// given a format string returns the type and conversion structure
 	conv := *makeConv()
 	if varConv, ok := conv[format]; ok{
 		return varConv.fType, varConv.fConv
@@ -152,12 +153,12 @@ func makeConv() *map[string] varTypeStruct{
 			return ""
 		},
 		to: func(data string) string {
-			return data[8:] + data[5:7] + data[2:4]
+			return  data[8:] + data[5:7] + data[2:4]
 		},
 	}
 
 	dateTime := varFormatStruct {
-		fCount: 5,
+		fCount: 6,
 		from: func(pos int, parts *[]string) string {
 			timeofday  := timeFormat((*parts)[pos])
 			day  := (*parts)[pos+1]
@@ -173,7 +174,7 @@ func makeConv() *map[string] varTypeStruct{
 			return ""
 		},
 		to: func(data string) string {
-			return data[8:] + data[5:7] + data[2:4]
+			return dateTimeToCSV(data)
 		},
 	}
 
@@ -258,6 +259,20 @@ func latNVar(data string) string {
 	l := len(split[0])-1
 	return string(split[0][l])
 }
+
+
+func dateTimeToCSV(data string)(string){
+	// give RFC3339 formated stringr
+	// return time, day, month, year, zonehrs, zonemins as comma separated strings
+	timeParts :=  strings.Split(data, "T")
+	d := timeParts[0]
+	timeZ := strings.Split(timeParts[1], "+")
+    t := timeZ[0]
+	zone := strings.Split(timeZ[1], ":")
+	return  t[:2] + t[3:5] + t[6:] + "," + d[8:] + "," + d[5:7] + "," + d[:4] + "," + zone[0] + "," + zone[1]
+
+}
+
 	
 func setUp() *Handle {
 	var h Handle

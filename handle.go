@@ -85,9 +85,52 @@ func (h *Handle) Merge(results map[string]string) {
 		timeStamp = h.messageDate.UnixMilli()
 	}
 
+	vtypes :=  make(map[string]string)
 	for n, v := range results {
+		if template, found := h.sentences.variables[n]; found {
+			tType, _:= getConversion(template)
+			vtypes[tType] = v
+		}
 		h.data[n] = v
 		h.history[n] = timeStamp
+	}
+	rcDate := ""
+	if v, found := vtypes["datetime"]; found {
+		rcDate = v
+	} else if t, found := vtypes["time"]; found {
+		date := ""
+		if d, found := vtypes["date"]; found {
+			date = d
+		} else {
+			day, okd := vtypes["day"]
+			month, okm := vtypes["month"] 	
+			year, oky := vtypes["year"]
+			if okd && okm && oky {
+				d, _ := strconv.ParseInt(day, 10, 32)
+				m, _ := strconv.ParseInt(month, 10, 32)
+				y, _ := strconv.ParseInt(year, 10, 32)
+				if y < 60 {
+					y += 2000
+				} else {
+					y += 1900
+				}
+				date = fmt.Sprintf("%d-%02d-%02d", y, m, d)
+			}
+		}
+		if len(date) > 0 {
+			dateTime := date + "T" + t
+			zone := "00:00"
+			if z, ok := vtypes["zone"]; ok {
+				zone = z
+			}
+			rcDate = dateTime + "+" + zone	
+		}
+	}
+	if len(rcDate) > 0 {
+		messageDate, err := time.Parse(time.RFC3339, rcDate)
+		if err == nil{
+			h.messageDate = messageDate
+		}
 	}
 }
 
@@ -124,10 +167,9 @@ func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, er
 	parts := strings.Split(nmea[1:end_byte], ",")
 	preFix := parts[0][:2]
 	sentenceType := strings.ToLower(parts[0][2:])
-
 	results := make(map[string]string)
-	date := ""
-	dateTypes := make(map[string]string)
+
+	//dateTypes := make(map[string]string)
 
 	if varList, found := h.sentences.formats[sentenceType]; found{
 		fieldPointer := 1
@@ -135,10 +177,10 @@ func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, er
 			conVar := ""
 			varName := varList[varPointer]
 			if template, found := h.sentences.variables[varName]; found && fieldPointer < len(parts){
-				fType, cv := getConversion(template)
+				_, cv := getConversion(template)
 				if fieldPointer + cv.fCount <= len(parts){
 						conVar = cv.from(fieldPointer, &parts)
-						dateTypes[fType] = varName
+						// = varName
 				} else {
 						conVar = ""
 				}
@@ -148,45 +190,10 @@ func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, er
 				fieldPointer++
 			}
 		}
-		if len(dateTypes) > 1 {
-			if date_found, ok := dateTypes["date"]; ok {
-				date = date_found 
-			}
-			if day, ok := dateTypes["day"]; ok {
-				if month, ok := dateTypes["month"]; ok 	{
-					if year, ok := dateTypes["year"]; ok {
-						d, _ := strconv.ParseInt(day, 10, 32)
-						m, _ := strconv.ParseInt(month, 10, 32)
-						y, _ := strconv.ParseInt(year, 10, 32)
-						if y < 60 {
-							y += 2000
-						} else {
-							y += 1900
-						}
-						date = fmt.Sprintf("%d-%02d-%02d", y, m, d)
-					}
-				}
-			}
-			if len(date) > 0 {
-				if timeT, ok := dateTypes["time"]; ok {
-					dateTime := date + "T" + timeT
-					zone := "00:00"
-					if z, ok := dateTypes["zone"]; ok {
-						zone = z
-					}
-					rcDate := dateTime + "+" + zone	
-					messageDate, err := time.Parse(time.RFC3339, rcDate)
-					if err == nil{
-						h.messageDate = messageDate
-
-
-					}
-				}	
-			}
-		}
 	}
 	return results,  preFix, sentenceType, err
 }
+
 
 func (h *Handle) LatLongToFloat(params ...string) (float64, float64, error) {
 	/*

@@ -92,7 +92,14 @@ func TestConvetFloatLatLong(t *testing.T) {
 
 }
 
-func TestZDA(t *testing.T){;
+func TestDateConv(t *testing.T){
+	commaString := dateTimeToCSV("2021-09-15T11:09:10.59+01:40")
+	if commaString != "110910.59,15,09,2021,01,40"{
+		t.Errorf("Error time incorrectly parsed got %s", commaString)
+	}
+}
+
+func TestZDA(t *testing.T){
 	var sentences Sentences
 	sentences.Load("./example")
 	nm := sentences.MakeHandle()
@@ -106,6 +113,9 @@ func TestZDA(t *testing.T){;
 	if nm.data["datetime"] != "2021-09-15T11:09:10.59+01:40" {
 		t.Errorf("Error time incorrectly parsed got %s", nm.data["datetime"])
 	}
+
+	verify_sentence("$GPZDA,110910.59,15,09,2020,01,30*6D", t)
+	
 	
 }
 
