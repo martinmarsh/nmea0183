@@ -77,7 +77,7 @@ a copy of this file is in demo/main.go
 
     func main() {
         // For easy start we use built in sentences
-        sentences := nmea0183.DefaultSentances()
+        sentences := nmea0183.DefaultSentences()
 
         // Now create a handle to the structure used to hold sentence definitions and parsed data
         nm:= sentences.MakeHandle()
@@ -268,7 +268,7 @@ Indicates the status of arrival (entering the arrival circle, or passing the per
 | 4     | radius_units   | A            | 1                 | N             |
 | 5     | waypt_id       | A            | 1                 | Chich         |
 
-**arrived_circle**:  Status A = Arrival Circle Entered,  V = not enterred
+**arrived_circle**:  Status A = Arrival Circle Entered,  V = not entered
 
 **passed_way_pt**:  Status A = Perpendicular passed at waypoint,  V = not passed
 
@@ -453,7 +453,7 @@ Actisense NGW-1 maps: 2000 -> 183, 0183 -> 2000
     Sentence def:
        "zda": {"datetime"} 
 
-**datetime**  Formatted date string to 
+**datetime**  Date time zone string as defined in RFC3339 Format
 
 Alternative could be defined Sentence defined:
 
