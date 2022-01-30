@@ -115,8 +115,7 @@ func TestZDA(t *testing.T){
 	}
 
 	verify_sentence("$GPZDA,110910.59,15,09,2020,01,30*6D", t)
-	
-	
+	verify_sentence("$GPZDA,110910.59,15,09,2020,-01,-30*6D", t)
 }
 
 
@@ -141,16 +140,16 @@ func TestZDACreate(t *testing.T){
 		t.Errorf("Error time incorrectly parsed got %s", nm.data["time"])
 	}
 	if nm.data["day"] != "15" || nm.data["month"] != "09" ||nm.data["year"] != "2020" {
-		t.Errorf("Icorrect data got %s %s %s", nm.data["day"], nm.data["month"], nm.data["year"])
+		t.Errorf("Incorrect data got %s %s %s", nm.data["day"], nm.data["month"], nm.data["year"])
 	}
-	if nm.data["tz"] != "01:30" {
+	if nm.data["tz"] != "+01:30" {
 		t.Errorf("Error TZ time incorrectly parsed got %s", nm.data["tz"])
 	}
 	
 	// Test loading another create is independant
 	nm2 := sentences.MakeHandle()
 	if len(nm2.data) != 0 || len(nm2.history) !=0 || len(nm.data) == 0 || len(nm.history) == 0 {
-		t.Errorf("Second Create call failed - check that they are independan ")
+		t.Errorf("Second Create call failed - check that they are independent ")
 	}
 	nm3 := sentences.MakeHandle()
 	nm3.Parse("$GPZDA,120910.59,15,09,2020,01,30*6E")

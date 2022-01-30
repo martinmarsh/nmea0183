@@ -14,6 +14,9 @@ type settings struct {
 }
 
 
+
+// The Handle structure contains private data used to define sentences, configuarations, and parsed data.
+//Methods on the struct allow parsing, updating of data and writing of sentences
 type Handle struct {
 	data                 map[string]string
 	history				 map[string]int64
@@ -23,10 +26,12 @@ type Handle struct {
 	sentences			 *Sentences
 }
 
+// Returns a copy of the current data set or results of merged parsed sentences
 func (h *Handle) GetMap() map[string]string{
 	return h.data
 }
 
+// Returns a copy of a parsed variable in string format or null if not present
 func (h *Handle) Get(key string) string {
 	if val, ok := h.data[key]; ok {
 		return val
@@ -35,6 +40,7 @@ func (h *Handle) Get(key string) string {
 	 }
 }
 
+// Returns a map of each data variable and the date and time it was updated 
 func (h *Handle) DateMap() map[string]time.Time{
 	dateMap := make(map[string] time.Time)
 	for k, v := range(h.history){
@@ -43,6 +49,7 @@ func (h *Handle) DateMap() map[string]time.Time{
 	return dateMap
 }
 
+// Returns a copy of the date a variable was updated
 func (h *Handle) Date(key string) time.Time {
 	if val, ok := h.history[key]; ok {
 		return time.UnixMilli(val)
@@ -51,10 +58,9 @@ func (h *Handle) Date(key string) time.Time {
 	 }
 }
 
+
+// Deletes variables in data which have a millisecond time stamp less than timeMS
 func (h *Handle) DeleteBefore(timeMS int64){
-	/*
-	Deletes variables in data which have a millisecond time stamp less than timeMS
-	*/
 	var timeNow int64
 
 	if h.settings.realTime {
@@ -71,7 +77,17 @@ func (h *Handle) DeleteBefore(timeMS int64){
 	}
 }
 
-func (h *Handle) Merge(results map[string]string) {
+
+
+// Adds the results of a parsed sentence to the handlers data set.
+// This is normally done automatically when Parse is used.
+// The update map is copied over any previous variables in the data assuming that
+// the data being updated is most recent. Existing variables are not deleted so it can
+// be used to "merge" results from different sentences.
+// Caution: do not write directly to the results map unless you understand the string format
+// associated with the variable in the sentence definitions
+func (h *Handle) Update(results map[string]string) {
+	
 	var timeStamp int64
 
 	if h.settings.autoClearPeriod > 0 { 
@@ -123,7 +139,7 @@ func (h *Handle) Merge(results map[string]string) {
 			if z, ok := vtypes["zone"]; ok {
 				zone = z
 			}
-			rcDate = dateTime + "+" + zone	
+			rcDate = dateTime + zone	
 		}
 	}
 	if len(rcDate) > 0 {
@@ -134,7 +150,11 @@ func (h *Handle) Merge(results map[string]string) {
 	}
 }
 
+// Set handle settings preferences:
+// autoClearPeriod = 0 for no automatic deletion of data or the value in seconds to keep data for
+// realTime = True to use the processor clock, false to take the time from the sentences being parsed
 func (h *Handle) Preferences(clear int64, realTime bool) {
+	
 	if clear < 1 {
 		h.settings.autoClearPeriod = 0
 	}else{
@@ -143,15 +163,26 @@ func (h *Handle) Preferences(clear int64, realTime bool) {
 	h.settings.realTime = realTime
 }
 
+// Parses a given sentence into handles data set using Update ie
+// assumes the sentence parsed is more recent.
+// Returns the GPS sentence device code and sentence name and any errors
+// If check sum is fails the sentence will not update the data set and will be
+// discarded.  The error returned should be checked to report the error.
 func (h *Handle) Parse(nmea string) (string, string, error){
 	data, preFix, postFix, error := h.ParseToMap(nmea)
 	if error == nil{
-		h.Merge(data)
+		h.Update(data)
 	}
 	return preFix, postFix, error
 }
 
+ 
+// Similar to Parse but does not update the data set but returns a map of the variables obtained
+// from the sentence.  This allows checking and filterring and optional updating of the data set
+// using Update.  Be careful not to corrupt the string format returned if you are going to
+// use in built functions to read the data or if you intend to update the data set.
 func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, error){
+	
 	end_byte := len(nmea)
 	var err error
 	if nmea[end_byte-3] == '*' {
@@ -168,8 +199,6 @@ func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, er
 	preFix := parts[0][:2]
 	sentenceType := strings.ToLower(parts[0][2:])
 	results := make(map[string]string)
-
-	//dateTypes := make(map[string]string)
 
 	if varList, found := h.sentences.formats[sentenceType]; found{
 		fieldPointer := 1
@@ -195,17 +224,11 @@ func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, er
 }
 
 
+// As a method on the handler structure the string parameters refer to variable names in data
+// Give one parameter for a variable name that holds a position string ie in form lat, Long or
+// give the names of 2 variables  which hold lat and long respectively.
+// Returns a 2 floats lat and long and an error.  Minus values for South and West
 func (h *Handle) LatLongToFloat(params ...string) (float64, float64, error) {
-	/*
-	As a method on the handler structure the string parameters refer to variable names in
-	c.data
-
-	Give one parameter for a variable name that holds a position string ie in form lat, Long or
-	give the names of 2 variables  which hold lat and long respectively.
-
-	Returns a 2 floats lat and long and an error.  Minus values for South and West
-	*/
-
 	if len(params) == 2 {
 		lat:= h.data[params[0]]
 		long := h.data[params[1]]
@@ -218,17 +241,12 @@ func (h *Handle) LatLongToFloat(params ...string) (float64, float64, error) {
 	return 0, 0, fmt.Errorf("illegal number of parmeters given to latlongtofloat")
 }
 
+// As a method on the data structure the string parameters refer to variable names in
+// data which will be set by converting the lat and long float parameters
+// One variable name assumes a position string containing lat, long will be set
+// two variable names assumes that 2 variables one for lat and on for long will bes set
+// Returns an error.  Assumes Minus values are for South and West
 func (h *Handle) LatLongToString(latFloat, longFloat float64, params ...string) error {
-	/*
-	As a method on the data structure the string parameters refer to variable names in
-	c.data wich will be set by converting the lat and long float parameters
-
-	One variable name assumes a position string containing lat, long will be set
-	two variable names assumes that 2 variables one for lat and on for long will bes set
-
-	Returns an error.  Assumes Minus values are for South and West
-	*/
-
 	if len(params) < 1 || len(params) > 2 {
 		return fmt.Errorf("illegal number of parmeters given to latlongtostring")
 	}
@@ -256,6 +274,10 @@ func (h *Handle) LatLongToString(latFloat, longFloat float64, params ...string) 
 }
 
 
+// Writes a sentence using the handlers data and sentence definitions. 
+// The sentence prefix is parsed in the first parameter followed by a string which 
+// matches the sentence definitions. The prefix is added in the resulting string after the $
+// and is included in the checksum. The prefix can be blank.
 func (h *Handle) WriteSentence(manCode string, sentenceName string) (string, error) {
 	sentenceType := strings.ToLower(sentenceName)
 	madeSentence := strings.ToUpper(manCode + sentenceName)
