@@ -4,11 +4,10 @@
 
 ### Reason to choose
 
-- Configurable Sentences definitions
+- Configurable Sentences definitions for reading and writing
 - Parsed values stored can be stored in user named variables
-- Collection of pre-defined common sentences and variables for quick start
-- Same configuration allows parsing and writing of defined sentences
-- Optional use of yaml, json or toml config file to externally change sentence and/or variable definitions post build
+- Pre-defined common sentences and variables for quick start
+- Optional use of yaml, json or toml to add or change sentences without re-building
 - Collects data across multiple sentences to merge into one results set
 - Readable values extracted eg position = "50° 00.3986'N, 000° 54.6007'W
 - Conversion funtions to float values
@@ -21,24 +20,28 @@
 
 ### Current Status
 
-Essentially functional but undergoing development and testing. Some experimental features may be added or removed as the package is being developed for use in my navigation system.
-Features marked with * are under development and refinement, templates are being refined as further sentences tested.
+release v0.1.0 Beta - Interfaces largely frozen ready for v1
 
-### Features
+### Overview
 
-- Sentences fully customisable and configurable via a Yaml/Json files
-- Built in basic sentences can be used if preferred
-- Check sum verification automatic if present
-- Sentence definitions and config can be preloaded and multiple se47ntences passed
-- Results returned in readable string format eg bearing = 100°T  position = "50° 00.3986'N, 000° 54.6007'W"
-- Sentence values are collected in a GO map with user named keys
-- Sentence fields can be ignored if not required
-- Variables can be mapped to different sources for example when using two GPS systems
-- Designed for continuous processing and data logging
-- Can read extract date and time from multiple sentences - useful to set Raspberry Pi clock
-- Auto removal of expired data
-- Lat/long position from string to float
-- Lat/Long Position from float to string
+This Go package might be used in an application which receives NMEA 0183 sentences from a number of sources and combines the data so as to keep track of status, record a log etc. Also the
+combined data might be used to create sentences for sending on
+to other devices for display or further processing.
+
+A typical example might be a boat applcation. GPS, Heading, Speed, depth, wind data might be collected.  Sentences might be generated for Ploters, displays and VHF radio. In some cases the
+data might need to be processed by the application for navigation 
+planning updates on the go or for bespoke applications such a
+homemade autohelm.
+
+With this type of application it is somteimes necessay to ignore sentences from some sources because they are relays of sentences already processed or they are from less accurate sources. It is therefore useful to set up sentence parsing specific to sources and even change sentences to cope with different versions of hardware.
+
+This package is able to address these issues by setting up handlers which have there own data and sentence parsing. In addition data from one handler can be filterred and processed and then merged into other handlers data set.
+
+Another issue is that data can become outdated for example GPS position may no longer be updated if the signal is loss. All data items are dated and can be auto deleted when out of date.
+
+To get started we will look at using the basic in built sentences and a single handler. When familar with the basic approach it will be fairly obvious how to build a more complex solution and save the sentences settings into external defintion files. External files make it much easier to make adjustemnts one the Go application has be been built and installed.
+
+It should be noted that the data accumulated is in readable string format such as "50° 00.3986'N, 000° 54.6007'W". This makes it easy to read and log data and is less procesing to relay data in new sentences.  There are funtions to read complex data into float variables for supporting calculations.  There are functions to write data into a handler's data and convert into the correct format.
 
 ### Limitations
 
@@ -72,10 +75,10 @@ a copy of this file is in demo/main.go
     )
 
     func main() {
-        // For easy start use built in sentences
+        // For easy start we use built in sentences
         sentences := nmea0183.DefaultSentances()
 
-        // Now create a handle to sentence processing, config and processed data
+        // Now create a handle to the structure used to hold sentence defintions and parsed data
         nm:= sentences.MakeHandle()
 
         // Now parse a sentence
