@@ -67,12 +67,30 @@ func makeConv() *map[string] varTypeStruct{
 	hrsMins := varFormatStruct {
 		fCount: 2,
 		from: func(pos int, parts *[]string) string {
-			 return (*parts)[pos]+ ":" + (*parts)[pos+1] 
+				hr := (*parts)[pos]
+				mins :=  (*parts)[pos+1]
+				sign := "+"
+				if len(hr) > 1 && hr[0] == '-'{
+					sign = "-"
+					hr = hr[1:]
+				}
+				if len(mins) > 1 && mins[0] == '-'{
+					sign = "-"
+					mins = mins[1:]
+				}
+				return sign + hr + ":" + mins
 			},
 		to: func(data string) string {
 			l := len(data)
-			if l > 3 {
-			   return data[:2] + "," + data[3:]
+			if l > 4 {
+				if data[0] == '+'{
+					return data[1:3] + "," + data[4:]
+				}
+				mins := data[4:]
+				if mins != "00"{
+					mins = "-" + mins
+				}
+			   return data[:3] + "," + mins
 			}
 			return  ","
 		},
@@ -166,7 +184,7 @@ func makeConv() *map[string] varTypeStruct{
 			year := (*parts)[pos+3]
 			tz :=  hrsMins.from(pos+4 ,parts)
 			date, errd := DateStrFromStrs(day, month, year)
-			rcDate := date + "T" + timeofday + "+" + tz	
+			rcDate := date + "T" + timeofday + tz	
 		
 			if errd == nil {
 				return rcDate
@@ -262,14 +280,24 @@ func latNVar(data string) string {
 
 
 func dateTimeToCSV(data string)(string){
-	// give RFC3339 formated stringr
+	// give RFC3339 formated string
 	// return time, day, month, year, zonehrs, zonemins as comma separated strings
 	timeParts :=  strings.Split(data, "T")
 	d := timeParts[0]
 	timeZ := strings.Split(timeParts[1], "+")
+	sign := ""
+	signMins := ""
+	if len(timeZ) == 1 {
+		timeZ = strings.Split(timeParts[1], "-")
+		sign = "-"
+	}
     t := timeZ[0]
 	zone := strings.Split(timeZ[1], ":")
-	return  t[:2] + t[3:5] + t[6:] + "," + d[8:] + "," + d[5:7] + "," + d[:4] + "," + zone[0] + "," + zone[1]
+	signMins = sign
+	if zone[0] == "00" {
+		signMins = ""
+	}
+	return  t[:2] + t[3:5] + t[6:] + "," + d[8:] + "," + d[5:7] + "," + d[:4] + "," + sign + zone[0] + "," + signMins  + zone[1]
 
 }
 
