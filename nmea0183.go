@@ -207,6 +207,7 @@ func makeConv() *map[string] varTypeStruct{
 		"x": {fType: "integer", fConv: copyField},
 		"-x": {fType: "signed integer", fConv: copyField},
 		"xxx,T": {fType: "compass", fConv: compass},
+		"x.x,T": {fType: "compass", fConv: compass},
 		"T": {fType: "magnetic", fConv: copyField},
 		"x.x,R,N": {fType: "cross track error", fConv: xte},
 		"lat,NS": {fType: "lat", fConv: lat},

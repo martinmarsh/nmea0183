@@ -235,9 +235,11 @@ By choosing different definition files can use different handles to parse senten
     chan1 := sentences1.MakeHandle()
     chan2 := sentences1.MakeHandle()
 
-    results1 := chan1.Parse("$GPAPB,A,A,5,L,N,V,V,359.,T,1,359.1,T,6,T,A*7C") 
+    chan1.Parse("$GPAPB,A,A,5,L,N,V,V,359.,T,1,359.1,T,6,T,A*7C")
+    results1 := chan1.GetMap() 
 
-    results2 := chan2.Parse("$GPAPB,A,A,5,L,N,V,V,359.,T,1,359.1,T,6,T,A*7C")
+    chan2.Parse("$GPAPB,A,A,5,L,N,V,V,359.,T,1,359.1,T,6,T,A*7C")
+     results2 := chan2.GetMap() 
 
     for example different configs might result in:
     results1:

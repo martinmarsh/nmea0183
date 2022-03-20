@@ -183,6 +183,11 @@ func TestAPB(t *testing.T){
 	verify_sentence("$GPAPB,A,A,5,L,N,V,V,359.,T,1,359.1,T,6,T,A*7C", t)
 }
 
+func TestHDM(t *testing.T){
+	verify_sentence("$HCHDM,172.5,M*28", t)
+	
+}
+
 
 func TestRMC(t *testing.T){
 	
