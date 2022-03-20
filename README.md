@@ -22,7 +22,7 @@
 
 ### Current Status
 
-release v0.1.1 Beta - Interfaces largely frozen ready for v1
+release v0.1.2 Beta - Interfaces largely frozen ready for v1
 
 ### Overview
 
