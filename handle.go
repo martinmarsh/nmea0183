@@ -320,8 +320,8 @@ func (h *Handle) WriteSentence(manCode string, sentenceName string) (string, err
 	return h.WriteSentencePrefixVar(manCode, sentenceName, "")
 }
 
-//This form of write sentence allows variables to be found in the data set which have been prefixed
-// see ParsePrefixVar for use
+// This form of write sentence allows variables to be found in the data set which have been prefixed
+// see ParsePrefixVar for how to create them
 
 func (h *Handle) WriteSentencePrefixVar(manCode string, sentenceName string, prefixVar string) (string, error) {
 	sentenceType := strings.ToLower(sentenceName)

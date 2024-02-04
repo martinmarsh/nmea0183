@@ -7,9 +7,9 @@ import (
 )
 
 
-func verify_sentence(sentence string, t *testing.T){
+func verify_sentence(sentence string, t *testing.T) *Handle {
 	
-	sentences := DefaultSentances()
+	sentences := DefaultSentences()
 	nm:= sentences.MakeHandle()
 
 	preFix, postFix, err := nm.Parse(sentence)
@@ -23,6 +23,25 @@ func verify_sentence(sentence string, t *testing.T){
 	if sentence != ret_sentence{
 		t.Error(fmt.Errorf("parsed sentence not equal write sentence : %s != %s", sentence, ret_sentence))
 	}
+
+	return nm
+}
+
+func verify_sentence_prefixvars(sentence, prefixVar string, nm *Handle, t *testing.T) *Handle {
+	
+	preFix, postFix, err := nm.ParsePrefixVar(sentence, prefixVar)
+	if err != nil {
+		t.Error("parsing input sentence error: %w", err)
+	}
+	ret_sentence, err := nm.WriteSentencePrefixVar(preFix, postFix, prefixVar)
+	if err != nil{
+		t.Error("writing output sentence error: %w", err)
+	}
+	if sentence != ret_sentence{
+		t.Error(fmt.Errorf("parsed sentence not equal write sentence : %s != %s", sentence, ret_sentence))
+	}
+
+	return nm
 }
 
 func TestConfig(t *testing.T) {
@@ -201,3 +220,15 @@ func TestRMC(t *testing.T){
 	verify_sentence("$GNRMC,001031.00,A,4404.1399,N,12118.8602,W,0.146,,100117,,,A,*57", t)
 
 }
+
+func TestPrefixVar(t *testing.T){
+	nm:= verify_sentence("$GPRMC,163400.19,A,5222.5111,N,00502.8679,E,4.4,272.6,130319,,,D,V*25", t)
+	verify_sentence_prefixvars("$GPRMC,163354.17,A,5222.5109,N,00502.8805,E,4.5,271.1,130319,,,D,V*24", "test_", nm, t)
+	if nm.data["test_fix_time"] != "16:33:54.17" || nm.data["fix_time"] != "16:34:00.19"{
+		t.Errorf(
+			"Did not distinguish in PrefixVar expect test_fix_time == 16:33:54.17 got %s and fix_time == 16:34:00.19 got %s",
+			 nm.data["test_fix_time"], nm.data["fix_time"])
+	}
+
+}
+

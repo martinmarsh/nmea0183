@@ -1,6 +1,6 @@
 package nmea0183
 
-func DefaultSentances() *Sentences {
+func DefaultSentences() *Sentences {
     var defaults Sentences
     defaults.formats = GetDefaultFormats()
     defaults.variables = GetDefaultVars()
