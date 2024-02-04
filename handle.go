@@ -168,6 +168,11 @@ func (h *Handle) Preferences(clear int64, realTime bool) {
 // Returns the GPS sentence device code and sentence name and any errors
 // If check sum is fails the sentence will not update the data set and will be
 // discarded.  The error returned should be checked to report the error.
+// prefix returned is manufacturing/device code eg HC in $GPRMS,....
+// sentence type is sentence code define in the config eg RMS in $GPRMS,...
+//
+// preFix, sentenceType, err = Parse(nmea_sentence)
+
 func (h *Handle) Parse(nmea string) (string, string, error){
 	data, preFix, postFix, error := h.ParseToMap(nmea)
 	if error == nil{
@@ -176,13 +181,46 @@ func (h *Handle) Parse(nmea string) (string, string, error){
 	return preFix, postFix, error
 }
 
+// As Parse but writes to the data variables which have supplied your own prefix
+// this would typically be used to distinguish in the data between variables from
+// different sources or devices which produce identical sentences. 
+//  
+// results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence, variable_prefix)
+// or if the sentence prefix can be used to distinguish:
+// results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence, nmea_sentence[1:2])
+//
+func (h *Handle) ParsePrefixVar(nmea string, preFixVar string) (string, string, error){
+	data, preFix, postFix, error := h.ParseToMap(nmea, preFixVar)
+	if error == nil{
+		h.Update(data)
+	}
+	return preFix, postFix, error
+}
+
  
-// Similar to Parse but does not update the data set but returns a map of the variables obtained
-// from the sentence.  This allows checking and filterring and optional updating of the data set
+// Similar to Parse and ParsePrefixVar but does not update the data set but returns a map of the
+// variables obtained from the sentence.
+// This allows checking and filtering and optional updating of the data set
 // using Update.  Be careful not to corrupt the string format returned if you are going to
 // use in built functions to read the data or if you intend to update the data set.
-func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, error){
-	
+//
+// results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence)
+// or
+// results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence, variable_prefix)
+//
+func (h *Handle) ParseToMap(params ...string)  (map[string]string, string, string, error){
+	l := len(params)
+	nmea := ""
+	var_prefix := ""
+	if l >= 1 {
+		nmea = strings.TrimSpace(params[0])
+	}
+	if l >= 2 {
+		var_prefix = params[1]
+	}
+	if len(nmea)<5 || len(nmea)>89 || nmea[0] != '$'{
+		return nil,"","",fmt.Errorf("%s", "Sentence must be between 5 and 89 and start with a $")
+	}
 	end_byte := len(nmea)
 	var err error
 	if nmea[end_byte-3] == '*' {
@@ -214,7 +252,7 @@ func (h *Handle) ParseToMap(nmea string)  (map[string]string, string, string, er
 						conVar = ""
 				}
 				fieldPointer += cv.fCount
-				results[varName] = conVar
+				results[var_prefix + varName] = conVar
 			} else {
 				fieldPointer++
 			}
@@ -279,6 +317,13 @@ func (h *Handle) LatLongToString(latFloat, longFloat float64, params ...string) 
 // matches the sentence definitions. The prefix is added in the resulting string after the $
 // and is included in the checksum. The prefix can be blank.
 func (h *Handle) WriteSentence(manCode string, sentenceName string) (string, error) {
+	return h.WriteSentencePrefixVar(manCode, sentenceName, "")
+}
+
+// This form of write sentence allows variables to be found in the data set which have been prefixed
+// see ParsePrefixVar for how to create them
+
+func (h *Handle) WriteSentencePrefixVar(manCode string, sentenceName string, prefixVar string) (string, error) {
 	sentenceType := strings.ToLower(sentenceName)
 	madeSentence := strings.ToUpper(manCode + sentenceName)
 
@@ -286,7 +331,7 @@ func (h *Handle) WriteSentence(manCode string, sentenceName string) (string, err
 		for _, v := range varList {
 			if vFormat, foundVar := h.sentences.variables[v]; foundVar {
 				_, cv := getConversion(vFormat)
-				if value, ok := h.data[v]; !ok || len(v) == 0 || v == "n/a" || len(value) == 0{
+				if value, ok := h.data[prefixVar + v]; !ok || len(v) == 0 || v == "n/a" || len(value) == 0{
 					for i:=0; i < cv.fCount; i++{
 						madeSentence += ","
 					}

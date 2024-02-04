@@ -22,13 +22,13 @@
 
 ### Current Status
 
-release v0.1.2 Beta - Interfaces largely frozen ready for v1
+release v0.1.4 Beta - Interfaces largely frozen ready for v1
 
 ### Overview
 
-This Go package might be used in an application which receives NMEA 0183 sentences from a number of sources and combines them so have a real time record of status, record a log etc. Also the
-combined data might be used to create sentences for sending on
-to other devices for display or further processing.
+This Go package might be used in an application which receives NMEA 0183 sentences from a number of sources and combines them so have a real time record of status, record a log etc. Also the combined data might be used to create sentences for sending on
+to other devices for display or further processing.  If NMEA 2000 can also be decoded via additional hardware such as the Actisense NGW-1
+2000 to 0183 bidirectional bridge.
 
 A typical example might be a boat application. GPS, Heading, Speed, depth, wind data might be collected.  Sentences might be generated for Chart Plotters (eg Open CPN), display devices and the VHF radio. In some cases the data might need to be processed by the application for navigation planning updates on the go or for bespoke applications such a home made auto-helm.
 
