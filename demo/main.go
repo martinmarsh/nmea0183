@@ -10,7 +10,7 @@ import (
 func main() {
 
 // For easy start use built in sentences
-sentences := nmea0183.DefaultSentances()
+sentences := nmea0183.DefaultSentences()
 
 // Now create a handle to sentence processing, config and processed data
 nm:= sentences.MakeHandle()

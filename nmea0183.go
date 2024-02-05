@@ -307,7 +307,7 @@ func setUp() *Handle {
 	var h Handle
 	var set	settings
 	
-	set.realTime = true       // false for historic message processing (or No real time clock) and sentances include a date
+	set.realTime = true       // false for historic message processing (or No real time clock) and sentences include a date
 	set.autoClearPeriod = 0  // Disabled
 
 	h.data = make(map[string]string)

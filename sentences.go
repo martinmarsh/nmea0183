@@ -30,6 +30,21 @@ func (sent *Sentences) MakeHandle() *Handle {
 	return h
 }
 
+// This method on a sentence definition allows a quick start by returning a handle
+// configured in a simple to us way which automatically creates a config YAML
+// file on first use.  Also sets data expiry time to 60 secs
+func (sentences *Sentences) DefaultConfig() *Handle {
+	err := sentences.Load()
+	if err != nil{
+		sentences.SaveLoadDefault()
+	}
+	h := sentences.MakeHandle()
+
+	// set time period in seconds to remove old values (<= 0 to disable) and if real time processing
+	h.Preferences(60, true)
+	return h
+}
+
 // Adds a sentence format to sentences.  Give the sentence name eg RMC followed by a
 // list of variable names you wish to use.
 // This would be used instead of an external definitions file
