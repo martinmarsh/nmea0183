@@ -13,7 +13,7 @@ type settings struct {
 }
 
 // The Handle structure contains private data used to define sentences, configuarations, and parsed data.
-//Methods on the struct allow parsing, updating of data and writing of sentences
+// Methods on the struct allow parsing, updating of data and writing of sentences
 type Handle struct {
 	data        map[string]string
 	history     map[string]int64
@@ -182,7 +182,6 @@ func (h *Handle) Parse(nmea string) (string, string, error) {
 // results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence, variable_prefix)
 // or if the sentence prefix can be used to distinguish:
 // results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence, nmea_sentence[1:2])
-//
 func (h *Handle) ParsePrefixVar(nmea string, preFixVar string) (string, string, error) {
 	data, preFix, postFix, error := h.ParseToMap(nmea, preFixVar)
 	if error == nil {
@@ -200,7 +199,6 @@ func (h *Handle) ParsePrefixVar(nmea string, preFixVar string) (string, string, 
 // results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence)
 // or
 // results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence, variable_prefix)
-//
 func (h *Handle) ParseToMap(params ...string) (map[string]string, string, string, error) {
 	l := len(params)
 	nmea := ""
@@ -317,28 +315,44 @@ func (h *Handle) WriteSentence(manCode string, sentenceName string) (string, err
 func (h *Handle) WriteSentencePrefixVar(manCode string, sentenceName string, prefixVar string) (string, error) {
 	sentenceType := strings.ToLower(sentenceName)
 	madeSentence := strings.ToUpper(manCode + sentenceName)
-
+	var err error = nil
+	missing_data := ""
+	missing_var_def := ""
 	if varList, found := h.sentences.formats[sentenceType]; found {
 		for _, v := range varList {
 			if vFormat, foundVar := h.sentences.variables[v]; foundVar {
 				_, cv := getConversion(vFormat)
-				if value, ok := h.data[prefixVar+v]; !ok || len(v) == 0 || v == "n/a" || len(value) == 0 {
+				lookup_var := prefixVar + v
+				if value, ok := h.data[lookup_var]; !ok || len(v) == 0 || v == "n/a" || len(value) == 0 {
 					for i := 0; i < cv.fCount; i++ {
 						madeSentence += ","
 					}
+					if !ok && v != "n/a"  {
+						missing_data = fmt.Sprintf("%s;%s",missing_data, lookup_var)
+					}
 				} else {
-
 					madeSentence += "," + cv.to(value)
 				}
 			} else {
 				madeSentence += ","
+				missing_var_def = fmt.Sprintf("%s;%s",missing_var_def, v)
+			}
+			
+		}
+		if len(missing_var_def) > 0 {
+			err = fmt.Errorf("missing config variable definitions%s", missing_var_def)
+		}
+		if len(missing_data) > 0 {
+			if err == nil{
+				err = fmt.Errorf("missing required data%s", missing_data)
+			} else{
+				err = fmt.Errorf("%s and missing required data%s",err, missing_data)
 			}
 		}
-
 		madeSentence = "$" + madeSentence
 		checksum := checksum(madeSentence)
 		madeSentence += "*" + checksum
-		return madeSentence, nil
+		return madeSentence, err
 	}
 	return "", fmt.Errorf("no matching sentence definition")
 }

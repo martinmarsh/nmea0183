@@ -13,11 +13,23 @@ func main() {
 	// Now create a handle to sentence processing, config and processed data
 	nm := sentences.MakeHandle()
 
+	// if you try to create a sentence without parsing information
+	if gprmc, err := nm.WriteSentence("gp", "rmc"); err == nil {
+		fmt.Println(gprmc)
+	} else {
+		// you will get an error and best attempt to create a sentence
+		// only missing required fields not marked n/a will trigger an error
+		fmt.Println(err, gprmc)
+	}
+
+	//fmt.Println(gprmc)
+
 	// Now parse a sentence
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 
 	// values parsed are merged into a Data map
 	fmt.Println(nm.GetMap())
+
 	nm.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75")
 	fmt.Println(nm.GetMap())
 
