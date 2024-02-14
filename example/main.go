@@ -14,10 +14,10 @@ func main() {
 	var sentences nmea0183.Sentences
 
 	nm := sentences.DefaultConfig()
-	
+
 	// use returned handle to Parse NMEA statements
 	nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
-	
+
 	// values parsed are merged into a Data map
 	fmt.Println(nm.GetMap())
 
@@ -29,7 +29,7 @@ func main() {
 
 	//Can convert position variable to floats
 	latFloat, longFloat, _ := nm.LatLongToFloat("position")
-	fmt.Printf("%f %f\n",latFloat, longFloat)
+	fmt.Printf("%f %f\n", latFloat, longFloat)
 
 	//Can write a variable from float lat and long
 	nm.LatLongToString(latFloat, longFloat, "new_position")

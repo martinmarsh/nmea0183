@@ -7,27 +7,24 @@ import (
 	"time"
 )
 
-
 type settings struct {
-	realTime			 bool
-	autoClearPeriod		 int64               // in milliseconds
+	realTime        bool
+	autoClearPeriod int64 // in milliseconds
 }
-
-
 
 // The Handle structure contains private data used to define sentences, configuarations, and parsed data.
 //Methods on the struct allow parsing, updating of data and writing of sentences
 type Handle struct {
-	data                 map[string]string
-	history				 map[string]int64
-	messageDate			 time.Time
-	upDated				 time.Time
-	settings			 settings
-	sentences			 *Sentences
+	data        map[string]string
+	history     map[string]int64
+	messageDate time.Time
+	upDated     time.Time
+	settings    settings
+	sentences   *Sentences
 }
 
 // Returns a copy of the current data set or results of merged parsed sentences
-func (h *Handle) GetMap() map[string]string{
+func (h *Handle) GetMap() map[string]string {
 	return h.data
 }
 
@@ -35,15 +32,15 @@ func (h *Handle) GetMap() map[string]string{
 func (h *Handle) Get(key string) string {
 	if val, ok := h.data[key]; ok {
 		return val
-	 } else {
-		 return ""
-	 }
+	} else {
+		return ""
+	}
 }
 
-// Returns a map of each data variable and the date and time it was updated 
-func (h *Handle) DateMap() map[string]time.Time{
-	dateMap := make(map[string] time.Time)
-	for k, v := range(h.history){
+// Returns a map of each data variable and the date and time it was updated
+func (h *Handle) DateMap() map[string]time.Time {
+	dateMap := make(map[string]time.Time)
+	for k, v := range h.history {
 		dateMap[k] = time.UnixMilli(v)
 	}
 	return dateMap
@@ -53,31 +50,28 @@ func (h *Handle) DateMap() map[string]time.Time{
 func (h *Handle) Date(key string) time.Time {
 	if val, ok := h.history[key]; ok {
 		return time.UnixMilli(val)
-	 } else {
-		 return time.UnixMilli(0)
-	 }
+	} else {
+		return time.UnixMilli(0)
+	}
 }
 
-
 // Deletes variables in data which have a millisecond time stamp less than timeMS
-func (h *Handle) DeleteBefore(timeMS int64){
+func (h *Handle) DeleteBefore(timeMS int64) {
 	var timeNow int64
 
 	if h.settings.realTime {
 		timeNow = time.Now().UTC().UnixMilli()
-	}else{
+	} else {
 		timeNow = h.messageDate.UnixMilli()
 	}
-	timeBefore := timeNow-timeMS
+	timeBefore := timeNow - timeMS
 
-	for i, v := range h.history{
-		if v < timeBefore{
-				delete(h.data, i)
+	for i, v := range h.history {
+		if v < timeBefore {
+			delete(h.data, i)
 		}
 	}
 }
-
-
 
 // Adds the results of a parsed sentence to the handlers data set.
 // This is normally done automatically when Parse is used.
@@ -87,24 +81,24 @@ func (h *Handle) DeleteBefore(timeMS int64){
 // Caution: do not write directly to the results map unless you understand the string format
 // associated with the variable in the sentence definitions
 func (h *Handle) Update(results map[string]string) {
-	
+
 	var timeStamp int64
 
-	if h.settings.autoClearPeriod > 0 { 
+	if h.settings.autoClearPeriod > 0 {
 		h.DeleteBefore(h.settings.autoClearPeriod)
 	}
 	h.upDated = time.Now().UTC()
-	
+
 	if h.settings.realTime {
 		timeStamp = h.upDated.UnixMilli()
-	}else{
+	} else {
 		timeStamp = h.messageDate.UnixMilli()
 	}
 
-	vtypes :=  make(map[string]string)
+	vtypes := make(map[string]string)
 	for n, v := range results {
 		if template, found := h.sentences.variables[n]; found {
-			tType, _:= getConversion(template)
+			tType, _ := getConversion(template)
 			vtypes[tType] = v
 		}
 		h.data[n] = v
@@ -119,7 +113,7 @@ func (h *Handle) Update(results map[string]string) {
 			date = d
 		} else {
 			day, okd := vtypes["day"]
-			month, okm := vtypes["month"] 	
+			month, okm := vtypes["month"]
 			year, oky := vtypes["year"]
 			if okd && okm && oky {
 				d, _ := strconv.ParseInt(day, 10, 32)
@@ -139,12 +133,12 @@ func (h *Handle) Update(results map[string]string) {
 			if z, ok := vtypes["zone"]; ok {
 				zone = z
 			}
-			rcDate = dateTime + zone	
+			rcDate = dateTime + zone
 		}
 	}
 	if len(rcDate) > 0 {
 		messageDate, err := time.Parse(time.RFC3339, rcDate)
-		if err == nil{
+		if err == nil {
 			h.messageDate = messageDate
 		}
 	}
@@ -154,10 +148,10 @@ func (h *Handle) Update(results map[string]string) {
 // autoClearPeriod = 0 for no automatic deletion of data or the value in seconds to keep data for
 // realTime = True to use the processor clock, false to take the time from the sentences being parsed
 func (h *Handle) Preferences(clear int64, realTime bool) {
-	
+
 	if clear < 1 {
 		h.settings.autoClearPeriod = 0
-	}else{
+	} else {
 		h.settings.autoClearPeriod = clear * 1000
 	}
 	h.settings.realTime = realTime
@@ -173,9 +167,9 @@ func (h *Handle) Preferences(clear int64, realTime bool) {
 //
 // preFix, sentenceType, err = Parse(nmea_sentence)
 
-func (h *Handle) Parse(nmea string) (string, string, error){
+func (h *Handle) Parse(nmea string) (string, string, error) {
 	data, preFix, postFix, error := h.ParseToMap(nmea)
-	if error == nil{
+	if error == nil {
 		h.Update(data)
 	}
 	return preFix, postFix, error
@@ -183,21 +177,20 @@ func (h *Handle) Parse(nmea string) (string, string, error){
 
 // As Parse but writes to the data variables which have supplied your own prefix
 // this would typically be used to distinguish in the data between variables from
-// different sources or devices which produce identical sentences. 
-//  
+// different sources or devices which produce identical sentences.
+//
 // results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence, variable_prefix)
 // or if the sentence prefix can be used to distinguish:
 // results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence, nmea_sentence[1:2])
 //
-func (h *Handle) ParsePrefixVar(nmea string, preFixVar string) (string, string, error){
+func (h *Handle) ParsePrefixVar(nmea string, preFixVar string) (string, string, error) {
 	data, preFix, postFix, error := h.ParseToMap(nmea, preFixVar)
-	if error == nil{
+	if error == nil {
 		h.Update(data)
 	}
 	return preFix, postFix, error
 }
 
- 
 // Similar to Parse and ParsePrefixVar but does not update the data set but returns a map of the
 // variables obtained from the sentence.
 // This allows checking and filtering and optional updating of the data set
@@ -208,7 +201,7 @@ func (h *Handle) ParsePrefixVar(nmea string, preFixVar string) (string, string, 
 // or
 // results data map,  preFix, sentenceType, err = ParseToMap(nmea_sentence, variable_prefix)
 //
-func (h *Handle) ParseToMap(params ...string)  (map[string]string, string, string, error){
+func (h *Handle) ParseToMap(params ...string) (map[string]string, string, string, error) {
 	l := len(params)
 	nmea := ""
 	var_prefix := ""
@@ -218,8 +211,8 @@ func (h *Handle) ParseToMap(params ...string)  (map[string]string, string, strin
 	if l >= 2 {
 		var_prefix = params[1]
 	}
-	if len(nmea)<5 || len(nmea)>89 || nmea[0] != '$'{
-		return nil,"","",fmt.Errorf("%s", "Sentence must be between 5 and 89 and start with a $")
+	if len(nmea) < 5 || len(nmea) > 89 || nmea[0] != '$' {
+		return nil, "", "", fmt.Errorf("%s", "Sentence must be between 5 and 89 and start with a $")
 	}
 	end_byte := len(nmea)
 	var err error
@@ -238,29 +231,28 @@ func (h *Handle) ParseToMap(params ...string)  (map[string]string, string, strin
 	sentenceType := strings.ToLower(parts[0][2:])
 	results := make(map[string]string)
 
-	if varList, found := h.sentences.formats[sentenceType]; found{
+	if varList, found := h.sentences.formats[sentenceType]; found {
 		fieldPointer := 1
 		for varPointer := 0; varPointer < len(varList); varPointer++ {
 			conVar := ""
 			varName := varList[varPointer]
-			if template, found := h.sentences.variables[varName]; found && fieldPointer < len(parts){
+			if template, found := h.sentences.variables[varName]; found && fieldPointer < len(parts) {
 				_, cv := getConversion(template)
-				if fieldPointer + cv.fCount <= len(parts){
-						conVar = cv.from(fieldPointer, &parts)
-						// = varName
+				if fieldPointer+cv.fCount <= len(parts) {
+					conVar = cv.from(fieldPointer, &parts)
+					// = varName
 				} else {
-						conVar = ""
+					conVar = ""
 				}
 				fieldPointer += cv.fCount
-				results[var_prefix + varName] = conVar
+				results[var_prefix+varName] = conVar
 			} else {
 				fieldPointer++
 			}
 		}
 	}
-	return results,  preFix, sentenceType, err
+	return results, preFix, sentenceType, err
 }
-
 
 // As a method on the handler structure the string parameters refer to variable names in data
 // Give one parameter for a variable name that holds a position string ie in form lat, Long or
@@ -268,11 +260,11 @@ func (h *Handle) ParseToMap(params ...string)  (map[string]string, string, strin
 // Returns a 2 floats lat and long and an error.  Minus values for South and West
 func (h *Handle) LatLongToFloat(params ...string) (float64, float64, error) {
 	if len(params) == 2 {
-		lat:= h.data[params[0]]
+		lat := h.data[params[0]]
 		long := h.data[params[1]]
 		return LatLongToFloat(lat, long)
 	}
-	if len(params) == 1{
+	if len(params) == 1 {
 		return LatLongToFloat(h.data[params[0]])
 	}
 
@@ -290,7 +282,7 @@ func (h *Handle) LatLongToString(latFloat, longFloat float64, params ...string) 
 	}
 
 	latStr, longStr, _ := LatLongToString(latFloat, longFloat)
-    var timeNow int64
+	var timeNow int64
 
 	if h.settings.realTime {
 		timeNow = time.Now().UTC().UnixMilli()
@@ -307,13 +299,12 @@ func (h *Handle) LatLongToString(latFloat, longFloat float64, params ...string) 
 		h.history[params[0]] = timeNow
 		h.history[params[1]] = timeNow
 	}
-	
+
 	return nil
 }
 
-
-// Writes a sentence using the handlers data and sentence definitions. 
-// The sentence prefix is parsed in the first parameter followed by a string which 
+// Writes a sentence using the handlers data and sentence definitions.
+// The sentence prefix is parsed in the first parameter followed by a string which
 // matches the sentence definitions. The prefix is added in the resulting string after the $
 // and is included in the checksum. The prefix can be blank.
 func (h *Handle) WriteSentence(manCode string, sentenceName string) (string, error) {
@@ -331,19 +322,19 @@ func (h *Handle) WriteSentencePrefixVar(manCode string, sentenceName string, pre
 		for _, v := range varList {
 			if vFormat, foundVar := h.sentences.variables[v]; foundVar {
 				_, cv := getConversion(vFormat)
-				if value, ok := h.data[prefixVar + v]; !ok || len(v) == 0 || v == "n/a" || len(value) == 0{
-					for i:=0; i < cv.fCount; i++{
+				if value, ok := h.data[prefixVar+v]; !ok || len(v) == 0 || v == "n/a" || len(value) == 0 {
+					for i := 0; i < cv.fCount; i++ {
 						madeSentence += ","
 					}
-				}else{
-					
-					madeSentence += "," + cv.to(value) 
+				} else {
+
+					madeSentence += "," + cv.to(value)
 				}
-			}else{
+			} else {
 				madeSentence += ","
 			}
 		}
-	
+
 		madeSentence = "$" + madeSentence
 		checksum := checksum(madeSentence)
 		madeSentence += "*" + checksum

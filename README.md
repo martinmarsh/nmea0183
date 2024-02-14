@@ -65,14 +65,13 @@ The default data persistence is also configurable.
 The data is always in readable string format and up to date so you can easily write logs to your own format or simply periodically
  write the map in JSON format to a log file.  There are functions to convert some data types such as position to float variables.
 
-
 ### Limitations
 
 - No plans to support AIS
 - Only supports comma delimited fields and messages starting with $
 - Limited to passing sentences and fields which are fix format
 
-## Full details:
+## Full details
 
 ### Assuming you have installed go and are outside of GOPATH
 
@@ -91,6 +90,7 @@ go install your_module
 
 To start write the following in main.go in your modules root directory
 a copy of this file is in demo/main.go
+
 ```go
 
     package main
@@ -144,6 +144,7 @@ Built in sentences and variables may be sufficient for some applications but soo
 bespoke configuration will be required. If you don't need the flexibility of an external configuration
 and are happy to build in the configuration into your compiled code you can parse your own sentence
 definitions.  This is how:
+
 ```go
 
     // example of 2 user defined sentences, just list the variable names to collect the data in
@@ -182,6 +183,7 @@ This ensures that the position comes from one just sentence and the parts cannot
 
 The above uses built in variable definitions but you can configure this too.
 Here is an example of variables which you could set to use instead of the default ones.
+
 ```go
     // Lets use our own time variables d map them to sentences
     sentences := map[string][]string {
@@ -218,19 +220,21 @@ For more flexibility having to install
 go and rebuild configurations can be read and written to nmea_sentences.yaml file in the working directory.
 Instead of Create but use Load.
 
+```go
     var sentences nmea0183.Sentences
     err := sentences.Load()
     handle.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 
-Can specify location of config file and type eg ymal or json
+//Can specify location of config file and type eg ymal or json
 
     err := sentences.Load(".", "filename", "ymal")
 
-A default Config file can be written using default settings:
+//A default Config file can be written using default settings:
 
     sentences.SaveDefault()
     or
     sentences.SaveDefault(".", "filename", "ymal")
+```
 
 ### Cleaning up old data
 
