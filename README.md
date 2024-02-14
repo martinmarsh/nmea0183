@@ -2,47 +2,68 @@
 
 ## Post build configurable NMEA 0183 sentence analyser and writer in a go package
 
-### Reason to choose
+This package was created to so solve a problem of logging all the data produced by many NMEA0183 and 2000
+devices (via a bridge Actisense NGW-1). The setup included a NMEA 2000 based plotter and use OpenCPN running on
+a RaspberryPI v4 as backup.
 
-- Focus on simply combining sentences from many sources and producing current status record
-- Configurable sentence definitions for reading and writing
-- Parsed values stored in user named variables
-- Optional use of yaml, json or toml to add or change sentences without re-building
-- Collects data across multiple sentences to merge into one or more results set
-- managing date history of variables and removing old data
-- Readable values extracted eg position = "50° 00.3986'N, 000° 54.6007'W
-- Fine gain configuration without need to rebuild
+I also wanted to produce sentences and define bespoke ones without having to rebuild the GO files using this library.
+This is important when you need to make interface changes add new sentences to a system being used on a small boat for
+navigation and don't have a development environment on board.
 
-### Reason to consider other packages
+It can be easily configured to cope with differences in device NMEA 0183 formats
 
-- Want a large set of pre-made sentence parsers
-- Focus on parsing into floats and pre-set structures
-- Need to parse more  multi-line sentences or variable repeated fields.
-- AIS parsing
+This package is used by the NMEA0183_MUX library which might also be useful to route, duplicate and generate NMEA messages to
+different devices.
 
-### Current Status
+Quick start:
 
-release v0.1.4 Beta - Interfaces largely frozen ready for v1
+```go
 
-### Overview
+var sentences nmea0183.Sentences
 
-This Go package might be used in an application which receives NMEA 0183 sentences from a number of sources and combines them so have a real time record of status, record a log etc. Also the combined data might be used to create sentences for sending on
-to other devices for display or further processing.  If NMEA 2000 can also be decoded via additional hardware such as the Actisense NGW-1
-2000 to 0183 bidirectional bridge.
+nm := sentences.DefaultConfig()
 
-A typical example might be a boat application. GPS, Heading, Speed, depth, wind data might be collected.  Sentences might be generated for Chart Plotters (eg Open CPN), display devices and the VHF radio. In some cases the data might need to be processed by the application for navigation planning updates on the go or for bespoke applications such a home made auto-helm.
+// then just use Parse NMEA strings as they arrive
+// using some examples of a couple of possible strings
 
-With this type of application it is sometimes necessary to ignore sentences from some sources because they are relays of sentences already processed or they are from less accurate sources. It is therefore useful to easily set up sentence parsing specific to sources and even change sentences to cope with different versions of hardware.
+nm.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
+nm.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75")
 
-This package is able to address these issues by setting up handlers which have there own data and sentence parsing. In addition data from one handler can be filtered and processed and then merged into other handlers data set.
+// To read the data for example current position ie the latest received during last 60 seconds
 
-Another issue is that data can become outdated for example GPS position may no longer be updated if the signal is loss. All data items are dated and can be auto deleted when out of date.
+fmt.Println(nm.Get("position")
+// 50° 47.3986'N, 000° 54.6007'W
 
-The package does not have a complete range of pre-built sentences because you would generally need to set parsing for your application. For example parsing all sentences from a GPS often is bad practice. Data such as position is repeated in many sentences. If for example you choose to parse just RMC sentence you will get data and time of fix as well as position. Getting data in a more atomic way makes the data processing safer and saves overhead when using small processors such as the Raspberry Pi. It also makes it easier to select the best source as for example boats often have more than one GPS. Setting up bespoke parsing is simple since there is a comprehensive range of in built in formats.  These formats can be used programmatically or used in external json/yaml definition files.
+// To access all data accumulated over last 60 seconds 
+// ie stale items are deleted after 60 seconds and new data overwrites the last value
 
-To get started we will look at using the basic in built sentences and a single handler. When familiar with the basic approach it will be fairly obvious how to build a more complex solution and save the sentences settings into external definition files. External files make it much easier to make adjustments one the Go application has be been built and installed.
+x:= nm.GetMap())
 
-It should be noted that the data accumulated is in readable string format such as "50° 00.3986'N, 000° 54.6007'W". This makes it easy to read and log data and is less processing to relay data in new sentences.  There are functions to read complex data into float variables for supporting calculations.  There are functions to write data into a handler's data and convert into the correct format.
+// then can use  x["position] to get position, x["datetime"] etc  ie the data obtained above is
+
+fm.Println(x)
+//map[datetime:2020-09-15T11:09:10.59+00:00 faa_mode:D fix_date:2020-09-15 fix_time:11:09:10.59 mag_var:-0.24 nav_status:V position:50° 47.3986'N, 000° 54.6007'W sog:0.08 status:A tmg:0.19]
+
+// to make a new sentence from the data 
+
+gprmc, _ := nm.WriteSentence("gp", "rmc")
+fmt.Println(gprmc)
+$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75 
+
+// note in this example same as parsed in but typical GPS units create multiple sentence types every second so
+// in a real use case the generated message will have the very latest info from a combined source
+
+
+```
+
+The above will on first run create a nmea_sentences.yaml file in your current directory which will be used on the next run.
+This provides an easy way customised configure the library but you can access the library without using DefaultConfig and
+load config files from different locations or just use the in built ones.
+
+The default data persistence is also configurable.
+
+The data is always in readable string format and up to date so you can easily write logs to your own format or simply periodically
+ write the map in JSON format to a log file.  There are functions to convert some data types such as position to float variables.
 
 ### Limitations
 
@@ -50,23 +71,27 @@ It should be noted that the data accumulated is in readable string format such a
 - Only supports comma delimited fields and messages starting with $
 - Limited to passing sentences and fields which are fix format
 
-## Install
+## Full details
 
 ### Assuming you have installed go and are outside of GOPATH
 
-    install go on your system
+```go
+install go on your system
 
-    go mod init  your_module
-    go get github.com/martinmarsh/nmea0183
+go mod init  your_module
+go get github.com/martinmarsh/nmea0183
 
-    write a main file as shown below or copy /example/main.go:
+//write a main file as shown below or copy /example/main.go:
 
-    go install your_module
+go install your_module
+```
 
 ### Basic use
 
 To start write the following in main.go in your modules root directory
 a copy of this file is in demo/main.go
+
+```go
 
     package main
 
@@ -111,6 +136,7 @@ a copy of this file is in demo/main.go
         fmt.Println(nm.GetMap())
 
         }
+```
 
 ### Defing your own sentences and mapping to variable
 
@@ -118,6 +144,8 @@ Built in sentences and variables may be sufficient for some applications but soo
 bespoke configuration will be required. If you don't need the flexibility of an external configuration
 and are happy to build in the configuration into your compiled code you can parse your own sentence
 definitions.  This is how:
+
+```go
 
     // example of 2 user defined sentences, just list the variable names to collect the data in
     zda := []string {"time","day","month","year","tz"}
@@ -134,6 +162,7 @@ definitions.  This is how:
 
     // Now just parse sentences
     nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6F")
+```
 
 In the above example "zda" refers to any NMEA 0183 sentence after the first 2 digits, the manufacturer's code is
 removed. The sentence definition refers to variables: "time","day","month","year","tz".  These variables
@@ -155,6 +184,7 @@ This ensures that the position comes from one just sentence and the parts cannot
 The above uses built in variable definitions but you can configure this too.
 Here is an example of variables which you could set to use instead of the default ones.
 
+```go
     // Lets use our own time variables d map them to sentences
     sentences := map[string][]string {
         "rmc": {"pos_time", "pos_status", "my_position", "sog", "tmg", "pos_date", "mag_var"},
@@ -182,6 +212,7 @@ Here is an example of variables which you could set to use instead of the defaul
         nm := Create(sentences, variables)
         nm.Parse("$GPZDA,110910.59,15,09,2020,01,30*6F")
         nm.Parse("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75")
+```
 
 ### Using a config file instead of building in sentence definitions
 
@@ -189,19 +220,21 @@ For more flexibility having to install
 go and rebuild configurations can be read and written to nmea_sentences.yaml file in the working directory.
 Instead of Create but use Load.
 
+```go
     var sentences nmea0183.Sentences
     err := sentences.Load()
     handle.Parse("$GPZDA,110910.59,15,09,2020,00,00*6F")
 
-Can specify location of config file and type eg ymal or json
+//Can specify location of config file and type eg ymal or json
 
     err := sentences.Load(".", "filename", "ymal")
 
-A default Config file can be written using default settings:
+//A default Config file can be written using default settings:
 
     sentences.SaveDefault()
     or
     sentences.SaveDefault(".", "filename", "ymal")
+```
 
 ### Cleaning up old data
 

@@ -6,17 +6,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-
 // Methods on Sentences are used to define sentence parsing definitions and create handlers
 type Sentences struct {
-	formats map[string][]string
+	formats   map[string][]string
 	variables map[string]string
 }
 
 // Pass a map containing a list of variable names for each sentence definition
 // and a map associating the variable with an internal format definition string
 // returns a sentence pointer to the made structure
-func MakeSentences(formats  map[string][]string, variables map[string]string) *Sentences{
+func MakeSentences(formats map[string][]string, variables map[string]string) *Sentences {
 	sent := Sentences{formats: formats, variables: variables}
 	return &sent
 }
@@ -30,17 +29,32 @@ func (sent *Sentences) MakeHandle() *Handle {
 	return h
 }
 
+// This method on a sentence definition allows a quick start by returning a handle
+// configured in a simple to us way which automatically creates a config YAML
+// file on first use.  Also sets data expiry time to 60 secs
+func (sentences *Sentences) DefaultConfig() *Handle {
+	err := sentences.Load()
+	if err != nil {
+		sentences.SaveLoadDefault()
+	}
+	h := sentences.MakeHandle()
+
+	// set time period in seconds to remove old values (<= 0 to disable) and if real time processing
+	h.Preferences(60, true)
+	return h
+}
+
 // Adds a sentence format to sentences.  Give the sentence name eg RMC followed by a
 // list of variable names you wish to use.
 // This would be used instead of an external definitions file
-func (sent *Sentences) AddFormat(key string, form []string){
+func (sent *Sentences) AddFormat(key string, form []string) {
 	sent.formats[key] = form
 }
 
 // Defines how each variable will be parsed from or written to sentences
-// give the sentence name folowed by the internal format definition
+// give the sentence name followed by the internal format definition
 // This would be used instead of an external definitions file
-func (sent *Sentences) AddVariable(key string, varFormat string){
+func (sent *Sentences) AddVariable(key string, varFormat string) {
 	sent.variables[key] = varFormat
 }
 
@@ -75,9 +89,9 @@ func (sent *Sentences) Load(setting ...string) error {
 
 // Loads a default definitions if the definition files does not exist
 // and then writes the file.
-// This is intended to help write definition files by producing a copy based on 
+// This is intended to help write definition files by producing a copy based on
 // in default examples. Edit it or use as a template for other definition files
-func (sent *Sentences) SaveLoadDefault(setting ...string){
+func (sent *Sentences) SaveLoadDefault(setting ...string) {
 	configSet := []string{".", "nmea_sentences", "yaml"}
 	copy(configSet, setting)
 

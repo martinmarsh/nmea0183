@@ -1,6 +1,6 @@
 package version
 
-var (    
-    Version string = "v0.1.4"
-    Build   string = "Beta"
+var (
+	Version string = "v1.0.0"
+	Build   string = "first release"
 )
