@@ -26,6 +26,26 @@ func verify_sentence(sentence string, t *testing.T) *Handle {
 	return nm
 }
 
+func verify_sentence_match(sentence, expected string, t *testing.T) *Handle {
+
+	sentences := DefaultSentences()
+	nm := sentences.MakeHandle()
+
+	preFix, postFix, err := nm.Parse(sentence)
+	if err != nil {
+		t.Error("parsing input sentence error: %w", err)
+	}
+	ret_sentence, err := nm.WriteSentence(preFix, postFix)
+	if err != nil {
+		t.Error("writing output sentence error: %w", err)
+	}
+	if expected != ret_sentence {
+		t.Error(fmt.Errorf("expected sentence not equal write sentence : %s != %s", expected, ret_sentence))
+	}
+
+	return nm
+}
+
 func verify_sentence_prefixvars(sentence, prefixVar string, nm *Handle, t *testing.T) *Handle {
 
 	preFix, postFix, err := nm.ParsePrefixVar(sentence, prefixVar)
@@ -205,6 +225,7 @@ func TestHDM(t *testing.T) {
 }
 
 func TestRMC(t *testing.T) {
+	verify_sentence("$GPRMC,,A,5125.1974,N,00043.4154,W,0.12,360,,0.65,E,A,V*63", t)
 
 	verify_sentence("$GPRMC,110910.59,A,5047.3986,N,00054.6007,W,0.08,0.19,150920,0.24,W,D,V*75", t)
 
@@ -226,4 +247,36 @@ func TestPrefixVar(t *testing.T) {
 			nm.data["test_fix_time"], nm.data["fix_time"])
 	}
 
+}
+
+func TestBlankMessages(t *testing.T) {
+	verify_sentence("$GPRMC,,,,,,,,,,,,,*67", t)
+	verify_sentence("$HCHDM,,*4A", t)
+	verify_sentence("$GPAPB,,,,,,,,,,,,,,,*68", t)
+	verify_sentence("$GPAPA,,,,,,,,,,*47", t)
+	verify_sentence("$GPAAM,,,,,*76", t)
+
+}
+
+func TestSampleFromRaymarine(t *testing.T) {
+	//Raymaine does not appear send 2 decimal places for seconds or omits trailing zero
+	verify_sentence_match(
+		"$GPZDA,113156.3,22,02,2024,00,00*52",
+		"$GPZDA,113156.30,22,02,2024,00,00*62",
+		t)
+	verify_sentence_match(
+		"$GPRMC,113157.3,A,5125.1974,N,00043.4154,W,0.12,360,220224,0.65,E,A,V*7A",
+		"$GPRMC,113157.30,A,5125.1974,N,00043.4154,W,0.12,360,220224,0.65,E,A,V*4A",
+		t)
+
+	verify_sentence("$HCHDG,,,,0.7,E*00", t)
+
+	//These are not defined in the default config and apart from some tech details are
+	//such as datum, HOP etc and are already covered and would just overwrite key nav data  
+	//verify_sentence("$GPGLL,5125.1974,N,00043.4154,W,113157.3,A,A*43", t)
+	//verify_sentence("$GPGNS,113157.3,5125.1974,N,00043.4154,W,A,14,0.82,126.8,,,,V*7B", t)
+	//verify_sentence("$GPGRS,113157.3,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,*4C", t)
+	//verify_sentence("$GPVTG,360,T,,M,0.12,N,0.22,K,A*15", t)
+	//verify_sentence("$GPDTM,W84,,0.0000,N,0.0000,E,0,W84*71", t)
+	//verify_sentence("$GPGGA,113157.3,5125.1974,N,00043.4154,W,1,14,,126.8,M,,M,,*7E", t)
 }

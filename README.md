@@ -2,20 +2,29 @@
 
 ## Post build configurable NMEA 0183 sentence analyser and writer in a go package
 
-This package was created to so solve a problem of logging all the data produced by many NMEA0183 and 2000
-devices (via a bridge Actisense NGW-1). The setup included a NMEA 2000 based plotter and use OpenCPN running on
-a RaspberryPI v4 as backup.
+This package was created to so solve a problem of logging data produced by many NMEA0183 and 2000 devices (via a bridge Actisense NGW-1). It has been proven on a system using USB com ports, OpenCPN, Actisence NGW-1, Raymarine Lighthouse, Garmin GPS, Digital Compass, AIS (message muliplexing only) and hosted on RaspberryPI and with a change to config files will run on Windows
 
-I also wanted to produce sentences and define bespoke ones without having to rebuild the GO files using this library.
-This is important when you need to make interface changes add new sentences to a system being used on a small boat for
-navigation and don't have a development environment on board.
+The package has the following key features:
 
-It can be easily configured to cope with differences in device NMEA 0183 formats
+* Multiple Sentence types can be parsed into a variable map (dictionary) so as to creates a database of current status. 
+
+* To avoid duplication in the data set and create a single point of truth sentences are parsed to logical variables as as position, sog etc. A Variable can be shared with different sentence types.
+
+* For efficiency and accuracy the data map uses formatted strings such as position ==  "50° 47.3986'N, 000° 54.6007'W"
+i.e. in a standard format with correct symbols
+
+* Conversions to many float and int types when needed to process in code. Read and writing sentences uses internal string format.
+
+* Can add configuration for new sentences and variables without re-compiling go files.
+
+* Sentences parsed in are often reproduced exactly with same checksum
+
+
 
 This package is used by the NMEA0183_MUX library which might also be useful to route, duplicate and generate NMEA messages to
 different devices.
 
-Quick start:
+## Quick start:
 
 ```go
 
