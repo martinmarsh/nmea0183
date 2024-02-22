@@ -7,6 +7,8 @@ func DefaultSentences() *Sentences {
 	return &defaults
 }
 
+// Mapping base variable names (without tag prefix) to built in
+// formats. The formats are similar to many NMEA configs
 func GetDefaultVars() map[string]string {
 	vars := map[string]string{
 		"arrived_circle":            "A",
@@ -55,13 +57,13 @@ func GetDefaultVars() map[string]string {
 	return vars
 }
 
+// Definition of some sentences types
 func GetDefaultFormats() map[string][]string {
 	formats := map[string][]string{
 		"aam": {"arrived_circle", "passed_waypt", "arrival_radius", "radius_units", "waypt_id"},
 		"apa": {"ap_status", "ap_loran", "xte", "arrived_circle", "passed_waypt", "bearing_to_waypt", "waypt_id"},
 		"apb": {"ap_status", "ap_loran", "xte", "arrived_circle", "passed_waypt", "bearing_origin_to_waypt", "waypt_id", "bearing_position_to_waypt", "hts", "ap_mode"},
 		"rmc": {"fix_time", "status", "position", "sog", "tmg", "fix_date", "mag_var", "faa_mode", "nav_status"},
-		//"zda": {"time", "day", "month", "year", "tz"},
 		"zda": {"datetime"},
 		"hdg": {"n/a", "n/a", "n/a", "mag_var"},
 		"hdm": {"hdm"},

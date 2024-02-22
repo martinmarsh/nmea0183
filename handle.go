@@ -327,26 +327,28 @@ func (h *Handle) WriteSentencePrefixVar(manCode string, sentenceName string, pre
 					for i := 0; i < cv.fCount; i++ {
 						madeSentence += ","
 					}
-					if !ok && v != "n/a"  {
-						missing_data = fmt.Sprintf("%s;%s",missing_data, lookup_var)
+					if !ok && v != "n/a" {
+						missing_data = fmt.Sprintf("%s;%s", missing_data, lookup_var)
 					}
 				} else {
 					madeSentence += "," + cv.to(value)
 				}
 			} else {
 				madeSentence += ","
-				missing_var_def = fmt.Sprintf("%s;%s",missing_var_def, v)
+				if v != "n/a" {
+					missing_var_def = fmt.Sprintf("%s;%s", missing_var_def, v)
+				}
 			}
-			
+
 		}
 		if len(missing_var_def) > 0 {
 			err = fmt.Errorf("missing config variable definitions%s", missing_var_def)
 		}
 		if len(missing_data) > 0 {
-			if err == nil{
+			if err == nil {
 				err = fmt.Errorf("missing required data%s", missing_data)
-			} else{
-				err = fmt.Errorf("%s and missing required data%s",err, missing_data)
+			} else {
+				err = fmt.Errorf("%s and missing required data%s", err, missing_data)
 			}
 		}
 		madeSentence = "$" + madeSentence

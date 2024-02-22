@@ -162,9 +162,11 @@ func makeConv() *map[string]varTypeStruct {
 		fCount: 1,
 		from: func(pos int, parts *[]string) string {
 			data := (*parts)[pos]
-			date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
-			if err == nil {
-				return date
+			if len(data) > 5 {
+				date, err := DateStrFromStrs(data[:2], data[2:4], data[4:])
+				if err == nil {
+					return date
+				}
 			}
 			return ""
 		},
@@ -231,49 +233,73 @@ func makeConv() *map[string]varTypeStruct {
 //var dateTypeTemplates = []string {"day", "month", "year", "date", "time", "zone"}
 
 func latStr(data string) string {
-	d, _ := strconv.ParseInt(data[:2], 10, 32)
-	m, _ := strconv.ParseFloat(data[2:], 32)
-	return fmt.Sprintf("%02d° %07.4f'", d, m)
+	if len(data) > 3 {
+		d, _ := strconv.ParseInt(data[:2], 10, 32)
+		m, _ := strconv.ParseFloat(data[2:], 32)
+		return fmt.Sprintf("%02d° %07.4f'", d, m)
+	}
+	return ""
 }
 
 func longStr(data string) string {
-	d, _ := strconv.ParseInt(data[:3], 10, 32)
-	m, _ := strconv.ParseFloat(data[3:], 32)
-	return fmt.Sprintf("%03d° %07.4f'", d, m)
+	if len(data) > 4 {
+		d, _ := strconv.ParseInt(data[:3], 10, 32)
+		m, _ := strconv.ParseFloat(data[3:], 32)
+		return fmt.Sprintf("%03d° %07.4f'", d, m)
+	}
+	return ""
 }
 
 func latVar(data string) string {
-	split := strings.SplitN(data[4:], ",", 2)
-	l := len(split[0]) - 2
-	return data[:2] + split[0][1:l]
+	if len(data) > 5 {
+		split := strings.SplitN(data[4:], ",", 2)
+		l := len(split[0]) - 2
+		return data[:2] + split[0][1:l]
+	}
+	return ""
 }
 
 func longVar(data string) string {
 	l := len(data) - 2
-	return data[:3] + data[5:l]
+	if l > 6 {
+		return data[:3] + data[5:l]
+	}
+	return ""
 }
 
 func posLongVar(data string) string {
-	split := strings.SplitN(data[5:], ",", 2)
-	l := len(split[1]) - 2
-	return split[1][1:4] + split[1][7:l]
+	if len(data) > 8 {
+		split := strings.SplitN(data[5:], ",", 2)
+		l := len(split[1]) - 2
+		return split[1][1:4] + split[1][7:l]
+	}
+	return ""
 }
 
 func longWeVar(data string) string {
 	l := len(data) - 1
-	return string(data[l])
+	if l >= 0 {
+		return string(data[l])
+	}
+	return ""
 }
 
 func posWeVar(data string) string {
-	split := strings.SplitN(data[5:], ",", 2)
-	l := len(split[1]) - 1
-	return string(split[1][l])
+	if len(data) > 6 {
+		split := strings.SplitN(data[5:], ",", 2)
+		l := len(split[1]) - 1
+		return string(split[1][l])
+	}
+	return ""
 }
 
 func latNVar(data string) string {
-	split := strings.SplitN(data[4:], ",", 2)
-	l := len(split[0]) - 1
-	return string(split[0][l])
+	if len(data) > 5 {
+		split := strings.SplitN(data[4:], ",", 2)
+		l := len(split[0]) - 1
+		return string(split[0][l])
+	}
+	return ""
 }
 
 func dateTimeToCSV(data string) string {
@@ -315,11 +341,13 @@ func setUp() *Handle {
 }
 
 func timeFormat(data string) string {
-	h, e := strconv.ParseInt(data[:2], 10, 16)
-	m, e1 := strconv.ParseInt(data[2:4], 10, 16)
-	s, e2 := strconv.ParseFloat(data[4:], 32)
-	if e == nil && e1 == nil && e2 == nil {
-		return fmt.Sprintf("%02d:%02d:%05.2f", h, m, s)
+	if len(data) > 5 {
+		h, e := strconv.ParseInt(data[:2], 10, 16)
+		m, e1 := strconv.ParseInt(data[2:4], 10, 16)
+		s, e2 := strconv.ParseFloat(data[4:], 32)
+		if e == nil && e1 == nil && e2 == nil {
+			return fmt.Sprintf("%02d:%02d:%05.2f", h, m, s)
+		}
 	}
 	return ""
 }
